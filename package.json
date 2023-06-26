@@ -1,0 +1,25 @@
+{
+  "name": "widt-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "BSTN",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "dev": "docker compose up -d && docker attach widt-app",
+    "edit": "docker exec -it widt-app sh",
+    "stop": "docker compose down",
+    "app": "nodemon index.js"
+  },
+  "dependencies": {
+    "@socket.io/redis-adapter": "^8.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.1",
+    "nodemon": "^2.0.22",
+    "redis": "^4.6.7",
+    "socket.io": "^4.7.0"
+  }
+}
