@@ -28,7 +28,7 @@ export async function getUser({ userid, groupid, name }) {
   const emptyUser = {
     userid,
     name,
-    answers: []
+    answers: {}
   }
   await writeUser(emptyUser)
   return emptyUser
@@ -123,7 +123,7 @@ export async function writeUser(user, service) {
 export async function writeGroup(group, service) {
   // redis
   if (!service || service === 'redis') {
-    l4('write group redis', group)
+    // l4('write group redis', group)
     await redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group))
   }
   // sql
@@ -136,28 +136,38 @@ export async function writeAnswer({ groupid, userid, chapter, k, answer, name },
   // redis
   if (!service || service === 'redis') { 
     const user = await getUser({ userid, groupid, name })
-    // await redisPubClient.set(`user-${user.userid}`, JSON.stringify(user))
+    if (user.answers === []) { user.answers = {} }
+    if (!user.answers[chapter]) { user.answers[chapter] = [] }
+    user.answers[chapter][k] = answer
+    // console.log(JSON.stringify(user))
+    await redisPubClient.set(`user-${user.userid}`, JSON.stringify(user))
   }
 }
 
-export async function setFinished({groupid, name}) {
+export async function setFinished({groupid, userid, name}) {
   const group = await getGroup(groupid)
-  if (!group.finished) { group.finished = [] }
-  if (!group.finished.includes(name)) { group.finished.push(name) }
+  if (!group.finished) { group.finished = {} }
+  if (!group.finished[name]) { group.finished[name] = [] }
+  if (group.finished && !group.finished[name].includes(userid)) { group.finished[name].push(userid) }
+  await writeGroup(group)
 }
-export async function setUnFinished(groupid, name) {
+export async function setUnFinished(groupid, userid, name) {
   const group = await getGroup(groupid)
-  if (!group.finished) { group.finished = [] }
-  if (group.finished.includes(name)) { group.finished.splice(group.finished.indexOf(name), 1) }
+  if (!group.finished) { group.finished = {} }
+  if (!group.finished[name]) { group.finished[name] = [] }
+  if (group.finished && group.finished[name].includes(userid)) { group.finished[name].splice(group.finished[name].indexOf(userid), 1) }
+  await writeGroup(group)
 }
 
 export async function setStartChapter({groupid, name}) {
   const group = await getGroup(groupid)
   if (!group.started) { group.started = [] }
   if (!group.started.includes(name)) { group.started.push(name) }
+  await writeGroup(group)
 }
 export async function setUnStartChapter(groupid, name) {
   const group = await getGroup(groupid)
   if (!group.started) { group.started = [] }
   if (group.started.includes(name)) { group.started.splice(group.started.indexOf(name), 1) }
+  await writeGroup(group)
 }

@@ -28,28 +28,38 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', async ({ groupid, userid }) => {
     // log
-    l1('joinRoom')
-    l2({ groupid, userid })
+    // l1('joinRoom')
+    // l2({ groupid, userid })
     // connect redis
     
     // get group or create
     const group = await dataApi.getGroup(groupid)
     
     // make sure user is added to group
+    console.log('-> add to group', userid)
     if (userid) {
       await dataApi.addToGroup({ groupid, userid })
     }
 
-    socket.emit('goto', group.position)
+    console.log('-> join group', userid, groupid)
 
     // join socket room
     socket.join(groupid)
+    
+    socket.emit('goto', group.position)
+
+  })
+
+  socket.on('getGroupData', async ({ groupid }, cb) => {
+    const group = await dataApi.getGroup(groupid)
+
+    io.to(groupid).emit('loadGroupData', group)
 
   })
 
   socket.on('prev', async ({ groupid }, cb) => {
 
-    l1('prev')
+    // l1('prev')
 
     const group = await dataApi.getGroup(groupid)
 
@@ -63,20 +73,23 @@ io.on('connection', (socket) => {
 
   })
 
-  socket.on('next', async ({ groupid }, cb) => {
+  socket.on('next', async ({ groupid, position }, cb) => {
       
-    l1('next')
+    // l1('next')
 
     const group = await dataApi.getGroup(groupid)
-
-    group.position = parseInt(group.position) + 1
+    if (position !== undefined) {
+      group.position = position
+    } else {
+      group.position = parseInt(group.position) + 1 || 0
+    }
 
     await dataApi.writeGroup(group)
 
-      console.log('goto');
-      io.to(groupid).emit('goto', group.position)
+    console.log('goto', group.position, groupid);
+    io.to(groupid).emit('goto', group.position)
 
-      if (cb) { cb() }
+    if (cb) { cb() }
 
   })
   
@@ -88,12 +101,13 @@ io.on('connection', (socket) => {
     //   return false
     // }
     // monitor
-    l3('create user', { userid, groupid, name })
+    // l3('create user', { userid, groupid, name })
     // (get or) create user
     const user = await dataApi.getUser({ userid, groupid, name })
     // add to group
     await dataApi.addToGroup({groupid, userid})
     // joinroom
+    console.log('createUser join group:', groupid)
     socket.join(groupid)
     // update all
     io.to(groupid).emit('addUser', { userid, name })
@@ -121,7 +135,7 @@ io.on('connection', (socket) => {
       // sync userdata
     const groupUserData = await dataApi.getGroupUserData(groupid)
     // send userdata to group
-    console.log('groupUserData', groupUserData)
+    // console.log('groupUserData', groupUserData)
     io.emit('groupUserData', groupUserData)
   })
 
@@ -170,12 +184,15 @@ io.on('connection', (socket) => {
 })
 
 router.get('/groupinfo', async (req, res) => {
+  // groups
   const groupKeys = await redisPubClient.keys("group-*")
   const groups = []
   for (let i in groupKeys) { groups.push(JSON.parse(await redisPubClient.get(groupKeys[i]))) }
+  // users
   const userKeys = await redisPubClient.keys("user-*")
   const users = []
   for (let i in userKeys) { users.push(JSON.parse(await redisPubClient.get(userKeys[i]))) }
+  // send
   res.send({groups, users})
 })
 
@@ -205,4 +222,6 @@ router.post('/beatthebot', async (req, res) => {
       });
 })
 
-export { router } 
+const socketApi = router
+
+export { socketApi } 

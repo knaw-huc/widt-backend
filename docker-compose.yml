@@ -38,6 +38,9 @@ services:
     image: mariadb
     container_name: widt-mariadb
     restart: on-failure
+    volumes: 
+      - ./mariadb:/var/lib/mysql
+      - ./:/data
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: database
@@ -45,10 +48,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     networks: 
       - traefik-public2
-    volumes: 
-      - ./mariadb:/var/lib/mysql
-    ports:
-      - 2227:3306
 networks:
  traefik-public2:
     name: traefik-public2
