@@ -14,31 +14,32 @@ services:
     image: redis:alpine
     container_name: widt-redis
     ports:
-      - '6379:6379'
+      - "6379:6379"
     networks:
       - traefik-public2
   app:
     container_name: widt-app
     image: node:18.1.0-alpine
+    # image: timbru31/node-alpine-git
     working_dir: /app
-    command: sh -c "yarn install && yarn run app"
-    networks: 
+    command: sh -c "yarn install && node ./dist/index.js"
+    networks:
       - traefik-public2
     expose:
       - 80
       - 2224
-    volumes: 
+    volumes:
       - type: bind
         source: ./
         target: /app
-    environment: 
-       MYSQL_USER: ${MYSQL_USER}
-       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
   db:
     image: mariadb
     container_name: widt-mariadb
     restart: on-failure
-    volumes: 
+    volumes:
       - ./mariadb:/var/lib/mysql
       - ./:/data
     environment:
@@ -46,8 +47,8 @@ services:
       MYSQL_DATABASE: database
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    networks: 
+    networks:
       - traefik-public2
 networks:
- traefik-public2:
+  traefik-public2:
     name: traefik-public2

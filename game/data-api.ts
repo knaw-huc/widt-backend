@@ -1,8 +1,21 @@
-import {redisPubClient} from './redisconnection.js'
-import {l1,l2,l3,l4} from './log.js'
+import {redisPubClient} from './redisconnection'
+import { l1, l2, l3, l4 } from './log'
 
+interface GROUP {
+  groupid: string,
+  position: number,
+  started: Array<string>,
+  users: Array<string>
+}
 
-export async function getUser({ userid, groupid, name }) {
+interface USER {
+  userid: string,
+  groupid: string,
+  name: string,
+  answers: { [chapter: string]: Array<any>; }
+}
+
+export async function getUser({ userid, groupid, name }: {userid: string, groupid: string, name?: string}) {
   /*
   get or create
   */
@@ -23,10 +36,11 @@ export async function getUser({ userid, groupid, name }) {
     user = JSON.parse(redisUser)
   }
   // return group if found
-  if (user) { return user }
+  if (user !== false) { return user }
   // create user if no redis && no mysql: 
-  const emptyUser = {
+  const emptyUser:USER = {
     userid,
+    groupid,
     name,
     answers: {}
   }
@@ -34,10 +48,13 @@ export async function getUser({ userid, groupid, name }) {
   return emptyUser
 }
 
-export async function removeUser({ groupid, userid }) {
+export async function removeUser({ groupid, userid }:{groupid:string, userid:string}) {
   
   // remove from group
   const group = await getGroup(groupid)
+  if (!group) {
+    return false
+  }
   group.users = group.users.filter(x => {
     return x !== userid
   })
@@ -48,7 +65,7 @@ export async function removeUser({ groupid, userid }) {
 
 }
 
-export async function getGroup(groupid) {
+export async function getGroup(groupid:string) {
   /*
   get or create
   */
@@ -69,21 +86,25 @@ export async function getGroup(groupid) {
     group = JSON.parse(redisGroup)
   }
   // return group if found
-  if (group) { return group }
+  if (typeof group === 'object') { return group }
 
   // create group if no redis && no mysql: 
-  const emptyGroup = {
+  const emptyGroup:GROUP = {
     groupid,
     position: 0,
+    started: [],
     users: []
   }
   await writeGroup(emptyGroup)
   return emptyGroup
 }
 
-export async function getGroupUserData(groupid) {
+export async function getGroupUserData(groupid:string) {
   const data = []
   const group = await getGroup(groupid)
+  if (!group) {
+    return false
+  }
   // l1('group data:')
   for (let i in group.users) {
     const userid = group.users[i]
@@ -95,9 +116,13 @@ export async function getGroupUserData(groupid) {
   return data
 }
 
-export async function addToGroup ({groupid, userid}) {
+export async function addToGroup ({groupid, userid}:{groupid:string, userid: string}) {
 
   const group = await getGroup(groupid)
+
+  if (!group) {
+    throw Error(`Group does not exist. (groupid: ${groupid}, addToGroup)`)
+  }
   
   if (!group.users.includes(userid)) {
     group.users.push(userid)
@@ -109,7 +134,7 @@ export async function addToGroup ({groupid, userid}) {
   return true
 }
 
-export async function writeUser(user, service) {
+export async function writeUser(user:USER, service?:string) {
   // redis
   if (!service || service === 'redis') {
     await redisPubClient.set(`user-${user.userid}`, JSON.stringify(user))
@@ -120,7 +145,7 @@ export async function writeUser(user, service) {
   }
 }
 
-export async function writeGroup(group, service) {
+export async function writeGroup(group:GROUP, service?:string) {
   // redis
   if (!service || service === 'redis') {
     // l4('write group redis', group)
@@ -130,43 +155,52 @@ export async function writeGroup(group, service) {
   if (!service || service === 'sql') {
     // await sql.create(emptyGroup)
   }
+  console.log('write group', group)
 }
 
-export async function writeAnswer({ groupid, userid, chapter, k, answer, name }, service) {
+export async function writeAnswer({ groupid, userid, chapter, k, answer, name }:{groupid:string, userid:string, chapter:string, k:number, answer:any, name:string}, service?:string) {
   // redis
   if (!service || service === 'redis') { 
     const user = await getUser({ userid, groupid, name })
-    if (user.answers === []) { user.answers = {} }
-    if (!user.answers[chapter]) { user.answers[chapter] = [] }
+    if (!user || user === true) {
+      throw Error(`Can't find user ${userid} to write answer ${k}, ${answer}`)
+    }
+    if (!(chapter in user.answers)) { user.answers[chapter] = [] }
     user.answers[chapter][k] = answer
     // console.log(JSON.stringify(user))
     await redisPubClient.set(`user-${user.userid}`, JSON.stringify(user))
   }
 }
 
-export async function setFinished({groupid, userid, name}) {
-  const group = await getGroup(groupid)
-  if (!group.finished) { group.finished = {} }
-  if (!group.finished[name]) { group.finished[name] = [] }
-  if (group.finished && !group.finished[name].includes(userid)) { group.finished[name].push(userid) }
-  await writeGroup(group)
+export async function setFinished({groupid, userid, name}:{groupid:string, userid:string, name?:string}) {
+  // const group = await getGroup(groupid)
+  // if (!group.finished) { group.finished = {} }
+  // if (!group.finished[name]) { group.finished[name] = [] }
+  // if (group.finished && !group.finished[name].includes(userid)) { group.finished[name].push(userid) }
+  // await writeGroup(group)
 }
-export async function setUnFinished(groupid, userid, name) {
-  const group = await getGroup(groupid)
-  if (!group.finished) { group.finished = {} }
-  if (!group.finished[name]) { group.finished[name] = [] }
-  if (group.finished && group.finished[name].includes(userid)) { group.finished[name].splice(group.finished[name].indexOf(userid), 1) }
-  await writeGroup(group)
+export async function setUnFinished({ groupid, userid, name }:{groupid:string, userid:string, name?:string}) {
+  // const group = await getGroup(groupid)
+  // if (!group.finished) { group.finished = {} }
+  // if (!group.finished[name]) { group.finished[name] = [] }
+  // if (group.finished && group.finished[name].includes(userid)) { group.finished[name].splice(group.finished[name].indexOf(userid), 1) }
+  // await writeGroup(group)
 }
 
-export async function setStartChapter({groupid, name}) {
+export async function setStartChapter({groupid, name}:{groupid:string,name:string}) {
   const group = await getGroup(groupid)
+  if (typeof group !== 'object') {
+    throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${name}`)
+  }
   if (!group.started) { group.started = [] }
   if (!group.started.includes(name)) { group.started.push(name) }
   await writeGroup(group)
 }
-export async function setUnStartChapter(groupid, name) {
+export async function setUnStartChapter({ groupid, name }:{groupid:string,name:string}) {
   const group = await getGroup(groupid)
+  if (typeof group !== 'object') {
+    throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${name}`)
+  }
   if (!group.started) { group.started = [] }
   if (group.started.includes(name)) { group.started.splice(group.started.indexOf(name), 1) }
   await writeGroup(group)

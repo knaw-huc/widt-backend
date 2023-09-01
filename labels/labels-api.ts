@@ -1,6 +1,6 @@
 import express from 'express'
-import Sequelize from 'sequelize'
-import connection from './connection.js'
+import { Sequelize, DataTypes } from 'sequelize'
+import connection from './connection'
 import { exec } from 'child_process'
 
 const router = express.Router()
@@ -9,14 +9,11 @@ const port = 4445
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json())
 
-const { DataTypes } = Sequelize;
+// const { DataTypes } = Sequelize;
 
-const sequelize = new Sequelize({
-  database: connection.database,
-  username: process.env.MYSQL_USER,
+const sequelize = new Sequelize(connection.database, process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, {
   host: connection.host,
-  port: connection.port,
-  password: process.env.MYSQL_PASSWORD,
+  // port: connection.port,
   dialect: 'mariadb'
 });
 
@@ -35,7 +32,7 @@ LABEL.sync().catch(err => {
 router.all('/labels/pull', async (req, res, next) => {
   const command = "git pull"
   var child = exec(command, { cwd: "./../" })
-  const alldata = []
+  const alldata: Array<Object> = []
   child.stdout.on('data', function (data) {
     alldata.push(data)
   })

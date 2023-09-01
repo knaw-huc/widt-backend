@@ -1,6 +1,6 @@
 import express from 'express'
-import { socketApi } from './game/socket-api.js'
-import { labelsApi } from './labels/labels-api.js'
+import { socketApi } from './game/socket-api'
+import { labelsApi } from './labels/labels-api'
 import cors from 'cors'
 
 const app = express()

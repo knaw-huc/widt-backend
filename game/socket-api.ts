@@ -1,10 +1,11 @@
-import { io, redisPubClient, redisSubClient } from './redisconnection.js'
-import * as dataApi from './data-api.js'
+import { io, redisPubClient, redisSubClient } from './redisconnection'
+import * as dataApi from './data-api'
 import { createAdapter } from "@socket.io/redis-adapter";
-import { l1, l2, l3, l4, log } from './log.js'
+import { l1, l2, l3, l4, log } from './log'
 import express from 'express'
-import fetch from 'node-fetch';
 import 'dotenv/config'
+
+// const fetch = import('node-fetch');
 
 const router = express.Router()
 
@@ -63,7 +64,7 @@ io.on('connection', (socket) => {
 
     const group = await dataApi.getGroup(groupid)
 
-    group.position = group.position === 0 ? 0 : parseInt(group.position) - 1
+    group.position = group.position === 0 ? 0 : group.position - 1
 
     await dataApi.writeGroup(group)
 
@@ -81,7 +82,7 @@ io.on('connection', (socket) => {
     if (position !== undefined) {
       group.position = position
     } else {
-      group.position = parseInt(group.position) + 1 || 0
+      group.position = group.position + 1 || 0
     }
 
     await dataApi.writeGroup(group)
@@ -159,13 +160,13 @@ io.on('connection', (socket) => {
 
   socket.on('startChapter', async ({ groupid, userid, name }) => {
     // write finished state
-    await dataApi.setStartChapter({ groupid, userid, name })
+    await dataApi.setStartChapter({ groupid, name })
     // update state to group
     io.to(groupid).emit('setStartChapter', {userid, name, groupid})
   })
   socket.on('unStartChapter', async ({ groupid, userid, name }) => {
     // write finished state
-    await dataApi.setUnStartChapter({ groupid, userid, name })
+    await dataApi.setUnStartChapter({ groupid, name })
     // update state to group
     io.to(groupid).emit('setUnStartChapter', {userid, name, groupid})
   })

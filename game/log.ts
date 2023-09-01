@@ -1,5 +1,5 @@
 
-const colors = {
+const colors: {[index: string]:any} = {
   Reset : "\x1b[0m",
   Bright : "\x1b[1m",
   Dim : "\x1b[2m",
@@ -29,16 +29,13 @@ const colors = {
   BgGray : "\x1b[100m"
 }
 
-export const l1 = function () { log(...arguments, 'BgGray') }
-export const l2 = function () { log(...arguments, 'FgYellow') }
-export const l3 = function () { log(...arguments, 'FgBlue') }
-export const l4 = function () { log(...arguments, 'FgRed') }
+export const l1 = function () { log('BgGray', ...arguments) }
+export const l2 = function () { log('FgYellow', ...arguments) }
+export const l3 = function () { log('FgBlue', ...arguments) }
+export const l4 = function () { log('FgRed', ...arguments) }
 
-export const log = function () {
-  let arg = [...arguments]
-  const col = arg[arg.length - 1]
-  if (Object.keys(colors).includes(col)) {
-    arg.splice(arg.length - 1, 1)
+export const log = function ( col:string, ...arg: any[]) {
+  if (col in colors) {
     console.log(colors[col], ...arg, '\x1b[0m')
   } else {
     console.log(...arg)
