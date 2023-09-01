@@ -37,12 +37,9 @@ io.on('connection', (socket) => {
     const group = await dataApi.getGroup(groupid)
     
     // make sure user is added to group
-    console.log('-> add to group', userid)
     if (userid) {
       await dataApi.addToGroup({ groupid, userid })
     }
-
-    console.log('-> join group', userid, groupid)
 
     // join socket room
     socket.join(groupid)
@@ -182,6 +179,10 @@ io.on('connection', (socket) => {
     // update state to group
     io.to(groupid).emit('setUnFinished', {userid, name, groupid})
   })
+})
+
+router.get('/bot', (req, res) => {
+  res.send({bottest: 'tralalal'})
 })
 
 router.get('/groupinfo', async (req, res) => {

@@ -63,11 +63,9 @@ redisconnection_1.io.on('connection', (socket) => {
         // get group or create
         const group = yield dataApi.getGroup(groupid);
         // make sure user is added to group
-        console.log('-> add to group', userid);
         if (userid) {
             yield dataApi.addToGroup({ groupid, userid });
         }
-        console.log('-> join group', userid, groupid);
         // join socket room
         socket.join(groupid);
         socket.emit('goto', group.position);
@@ -176,6 +174,9 @@ redisconnection_1.io.on('connection', (socket) => {
         // update state to group
         redisconnection_1.io.to(groupid).emit('setUnFinished', { userid, name, groupid });
     }));
+});
+router.get('/bot', (req, res) => {
+    res.send({ bottest: 'tralalal' });
 });
 router.get('/groupinfo', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // groups

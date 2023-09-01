@@ -155,7 +155,7 @@ export async function writeGroup(group:GROUP, service?:string) {
   if (!service || service === 'sql') {
     // await sql.create(emptyGroup)
   }
-  console.log('write group', group)
+  // console.log('write group', group)
 }
 
 export async function writeAnswer({ groupid, userid, chapter, k, answer, name }:{groupid:string, userid:string, chapter:string, k:number, answer:any, name:string}, service?:string) {

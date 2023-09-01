@@ -160,7 +160,7 @@ function writeGroup(group, service) {
         if (!service || service === 'sql') {
             // await sql.create(emptyGroup)
         }
-        console.log('write group', group);
+        // console.log('write group', group)
     });
 }
 exports.writeGroup = writeGroup;
