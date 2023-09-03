@@ -12,7 +12,6 @@ const router = express.Router()
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json())
 
-
 // launch socket server
 
 Promise.all([redisPubClient.connect(), redisSubClient.connect()]).then(() => {
@@ -48,7 +47,7 @@ io.on('connection', (socket) => {
 
   })
 
-  socket.on('getGroupData', async ({ groupid }, cb) => {
+  socket.on('getGroupData', async ({ groupid }) => {
     const group = await dataApi.getGroup(groupid)
 
     io.to(groupid).emit('loadGroupData', group)
@@ -113,7 +112,9 @@ io.on('connection', (socket) => {
     const groupUserData = await dataApi.getGroupUserData(groupid)
     io.to(groupid).emit('groupUserData', groupUserData)
     // done
-    cb(true)
+    if (cb) {
+      cb()
+    }
   })
 
   socket.on('removeUser', async ({ groupid, userid }, callback) => {
@@ -122,8 +123,13 @@ io.on('connection', (socket) => {
       callback(false)
     })
 
-    const groupUserData = await dataApi.getGroupUserData(groupid)
-    io.to(groupid).emit('groupUserData', groupUserData)
+    const groupUserData = await dataApi.getGroupUserData(groupid).catch(err => { 
+      console.warn('group does not exist.')
+    })
+    
+    if (typeof groupUserData !== 'boolean' && groupUserData) {
+      io.to(groupid).emit('groupUserData', groupUserData)
+    }
 
     callback(true)
 
@@ -155,34 +161,54 @@ io.on('connection', (socket) => {
   toggle finished state of chapter
   */
 
-  socket.on('startChapter', async ({ groupid, userid, name }) => {
+  socket.on('startChapter', async ({ groupid, chapter }) => {
     // write finished state
-    await dataApi.setStartChapter({ groupid, name })
+    await dataApi.setStartChapter({ groupid, chapter })
     // update state to group
-    io.to(groupid).emit('setStartChapter', {userid, name, groupid})
+    io.to(groupid).emit('setStartChapter', {chapter, groupid})
   })
-  socket.on('unStartChapter', async ({ groupid, userid, name }) => {
+  socket.on('unStartChapter', async ({ groupid, chapter }) => {
     // write finished state
-    await dataApi.setUnStartChapter({ groupid, name })
+    await dataApi.setUnStartChapter({ groupid, chapter })
     // update state to group
-    io.to(groupid).emit('setUnStartChapter', {userid, name, groupid})
+    io.to(groupid).emit('setUnStartChapter', {chapter, groupid})
   })
-  socket.on('finish', async ({ groupid, userid, name }) => {
+  socket.on('finish', async ({ groupid, chapter }) => {
     // write finished state
-    await dataApi.setFinished({ groupid, userid, name })
+    await dataApi.setFinished({ groupid, chapter })
     // update state to group
-    io.to(groupid).emit('setFinished', {userid, name, groupid})
+    io.to(groupid).emit('setFinished', {chapter, groupid})
   })
-  socket.on('unFinish', async ({ groupid, userid, name }) => {
+  socket.on('unFinish', async ({ groupid, chapter }) => {
     // write finished state
-    await dataApi.setUnFinished({ groupid, userid, name })
+    await dataApi.setUnFinished({ groupid, chapter })
     // update state to group
-    io.to(groupid).emit('setUnFinished', {userid, name, groupid})
+    io.to(groupid).emit('setUnFinished', {chapter, groupid})
   })
+  socket.on('setDone', async ({ groupid, userid, chapter }) => {
+    await dataApi.setDone({ groupid, userid, chapter })
+    io.to(groupid).emit('setDone', {userid, chapter, groupid})
+  })
+  socket.on('setUnDone', async ({ groupid, userid, chapter }) => {
+    await dataApi.setUnDone({ groupid, userid, chapter })
+    io.to(groupid).emit('setDone', {userid, chapter, groupid})
+  })
+
 })
 
-router.get('/bot', (req, res) => {
-  res.send({bottest: 'tralalal'})
+router.get('/testbot', async (req, res) => {
+  const data = await fetch('http://bot:5000/', {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    body: JSON.stringify({userid: 'user-123', 'groupid': 'group-123', 'comment': 'Vind dit weer echt vreselijk. Van mij hoeft het niet warmer dan 20 graden te worden. Maar ben bang dat dit helemaal de verkeerde kant op gaat. De winters zijn we al vergeten. Dat bestaat al niet meer. Dit is gewoon een natuur ramp!'})
+  }).then(data => data.json()).catch(err => {
+    console.warn('--- error --- ')
+    console.warn(err)
+    res.send({ error: err })
+  })
+  if (data) {
+    res.send(data)
+  }
 })
 
 router.get('/groupinfo', async (req, res) => {

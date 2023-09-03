@@ -9,7 +9,9 @@ exports.redisSubClient = exports.redisPubClient.duplicate();
 exports.redisPubClient.on("error", function (err) {
     console.log("Redis Error:", err);
 });
-exports.io = new socket_io_1.Server(2224, { cors: {
+exports.io = new socket_io_1.Server(2224, {
+    cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    } });
+    }
+});

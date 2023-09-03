@@ -1,19 +1,7 @@
 import {redisPubClient} from './redisconnection'
 import { l1, l2, l3, l4 } from './log'
 
-interface GROUP {
-  groupid: string,
-  position: number,
-  started: Array<string>,
-  users: Array<string>
-}
-
-interface USER {
-  userid: string,
-  groupid: string,
-  name: string,
-  answers: { [chapter: string]: Array<any>; }
-}
+import type { USER, GROUP } from '../types/types'
 
 export async function getUser({ userid, groupid, name }: {userid: string, groupid: string, name?: string}) {
   /*
@@ -36,13 +24,14 @@ export async function getUser({ userid, groupid, name }: {userid: string, groupi
     user = JSON.parse(redisUser)
   }
   // return group if found
-  if (user !== false) { return user }
+  if (typeof user === 'object') { return user }
   // create user if no redis && no mysql: 
   const emptyUser:USER = {
     userid,
     groupid,
     name,
-    answers: {}
+    answers: {},
+    done: []
   }
   await writeUser(emptyUser)
   return emptyUser
@@ -53,7 +42,7 @@ export async function removeUser({ groupid, userid }:{groupid:string, userid:str
   // remove from group
   const group = await getGroup(groupid)
   if (!group) {
-    return false
+    throw Error('Group does not exist.')
   }
   group.users = group.users.filter(x => {
     return x !== userid
@@ -93,23 +82,24 @@ export async function getGroup(groupid:string) {
     groupid,
     position: 0,
     started: [],
-    users: []
+    users: [],
+    finished: []
   }
   await writeGroup(emptyGroup)
   return emptyGroup
 }
 
 export async function getGroupUserData(groupid:string) {
-  const data = []
+  const data: Array<USER> = []
   const group = await getGroup(groupid)
   if (!group) {
-    return false
+    throw Error('Group does not exist.')
   }
-  // l1('group data:')
+  
   for (let i in group.users) {
     const userid = group.users[i]
     const userdata = await getUser({ groupid, userid })
-    if (userdata) {
+    if (typeof userdata === 'object') {
       data.push(userdata)
     }
   }
@@ -162,7 +152,7 @@ export async function writeAnswer({ groupid, userid, chapter, k, answer, name }:
   // redis
   if (!service || service === 'redis') { 
     const user = await getUser({ userid, groupid, name })
-    if (!user || user === true) {
+    if (!user) {
       throw Error(`Can't find user ${userid} to write answer ${k}, ${answer}`)
     }
     if (!(chapter in user.answers)) { user.answers[chapter] = [] }
@@ -172,36 +162,53 @@ export async function writeAnswer({ groupid, userid, chapter, k, answer, name }:
   }
 }
 
-export async function setFinished({groupid, userid, name}:{groupid:string, userid:string, name?:string}) {
-  // const group = await getGroup(groupid)
-  // if (!group.finished) { group.finished = {} }
-  // if (!group.finished[name]) { group.finished[name] = [] }
-  // if (group.finished && !group.finished[name].includes(userid)) { group.finished[name].push(userid) }
-  // await writeGroup(group)
+export async function setFinished({groupid, chapter}:{groupid:string, chapter:string}) {
+  const group = await getGroup(groupid)
+  if (!group.finished) { group.finished = [] }
+  if (!group.finished.includes(chapter)) {
+    group.finished.push(chapter)
+  }
+  await writeGroup(group)
 }
-export async function setUnFinished({ groupid, userid, name }:{groupid:string, userid:string, name?:string}) {
-  // const group = await getGroup(groupid)
-  // if (!group.finished) { group.finished = {} }
-  // if (!group.finished[name]) { group.finished[name] = [] }
-  // if (group.finished && group.finished[name].includes(userid)) { group.finished[name].splice(group.finished[name].indexOf(userid), 1) }
-  // await writeGroup(group)
+export async function setUnFinished({ groupid, chapter }:{groupid:string, chapter:string}) {
+  const group = await getGroup(groupid)
+  if (!group.finished) { group.finished = [] }
+  if (group.finished.includes) { group.finished.splice(group.finished.indexOf(chapter), 1) }
+  await writeGroup(group)
 }
 
-export async function setStartChapter({groupid, name}:{groupid:string,name:string}) {
+export async function setStartChapter({groupid, chapter}:{groupid:string,chapter:string}) {
   const group = await getGroup(groupid)
   if (typeof group !== 'object') {
-    throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${name}`)
+    throw Error(`Group does not exist. Can not start chapter ${groupid}, ${chapter}`)
   }
   if (!group.started) { group.started = [] }
-  if (!group.started.includes(name)) { group.started.push(name) }
+  if (!group.started.includes(chapter)) { group.started.push(chapter) }
   await writeGroup(group)
 }
-export async function setUnStartChapter({ groupid, name }:{groupid:string,name:string}) {
+export async function setUnStartChapter({ groupid, chapter }:{groupid:string,chapter:string}) {
   const group = await getGroup(groupid)
   if (typeof group !== 'object') {
-    throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${name}`)
+    throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${chapter}`)
   }
   if (!group.started) { group.started = [] }
-  if (group.started.includes(name)) { group.started.splice(group.started.indexOf(name), 1) }
+  if (group.started.includes(chapter)) { group.started.splice(group.started.indexOf(chapter), 1) }
   await writeGroup(group)
+}
+
+export async function setDone({ groupid, userid, chapter }: { groupid: string, userid: string, chapter: string }) {
+  const user = await getUser({ groupid, userid })
+  if (!user.done) { user.done = [] }
+  if (!user.done.includes(chapter)) {
+    user.done.push(chapter)
+  }
+  await writeUser(user)
+}
+export async function setUnDone({ groupid, userid, chapter }: { groupid: string, userid: string, chapter: string }) {
+  const user = await getUser({ groupid, userid })
+  if (!user.done) { user.done = [] }
+  if (user.done.includes(chapter)) {
+    user.done.splice(user.done.indexOf(chapter), 1)
+  }
+  await writeUser(user)
 }

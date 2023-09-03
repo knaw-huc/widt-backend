@@ -1,5 +1,5 @@
 {
-  "files": ["index.ts"],
+  "files": ["index.ts", "types/types.d.ts"],
   "compilerOptions": {
     "noImplicitAny": true,
     "target": "es2015",

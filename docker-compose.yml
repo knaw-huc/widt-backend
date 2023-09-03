@@ -17,6 +17,18 @@ services:
       - "6379:6379"
     networks:
       - traefik-public2
+  bot:
+    # image: python:3.10.13-alpine3.18
+    image: pytorch/pytorch:latest
+    container_name: bot
+    ports:
+      - 5001:5000
+    volumes:
+      - ./../wieisdetrol-bot:/app
+    working_dir: /app
+    command: sh -c "pip3 install -r requirements.txt && python run.py"
+    networks:
+      - traefik-public2
   app:
     container_name: widt-app
     image: node:18.1.0-alpine

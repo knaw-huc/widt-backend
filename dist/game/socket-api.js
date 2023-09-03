@@ -70,7 +70,7 @@ redisconnection_1.io.on('connection', (socket) => {
         socket.join(groupid);
         socket.emit('goto', group.position);
     }));
-    socket.on('getGroupData', ({ groupid }, cb) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('getGroupData', ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
         const group = yield dataApi.getGroup(groupid);
         redisconnection_1.io.to(groupid).emit('loadGroupData', group);
     }));
@@ -121,14 +121,20 @@ redisconnection_1.io.on('connection', (socket) => {
         const groupUserData = yield dataApi.getGroupUserData(groupid);
         redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
         // done
-        cb(true);
+        if (cb) {
+            cb();
+        }
     }));
     socket.on('removeUser', ({ groupid, userid }, callback) => __awaiter(void 0, void 0, void 0, function* () {
         const done = yield dataApi.removeUser({ groupid, userid }).catch(() => {
             callback(false);
         });
-        const groupUserData = yield dataApi.getGroupUserData(groupid);
-        redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
+        const groupUserData = yield dataApi.getGroupUserData(groupid).catch(err => {
+            console.warn('group does not exist.');
+        });
+        if (typeof groupUserData !== 'boolean' && groupUserData) {
+            redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
+        }
         callback(true);
     }));
     socket.on('getAllUserData', ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
@@ -150,34 +156,53 @@ redisconnection_1.io.on('connection', (socket) => {
     /*
     toggle finished state of chapter
     */
-    socket.on('startChapter', ({ groupid, userid, name }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('startChapter', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
-        yield dataApi.setStartChapter({ groupid, name });
+        yield dataApi.setStartChapter({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setStartChapter', { userid, name, groupid });
+        redisconnection_1.io.to(groupid).emit('setStartChapter', { chapter, groupid });
     }));
-    socket.on('unStartChapter', ({ groupid, userid, name }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('unStartChapter', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
-        yield dataApi.setUnStartChapter({ groupid, name });
+        yield dataApi.setUnStartChapter({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setUnStartChapter', { userid, name, groupid });
+        redisconnection_1.io.to(groupid).emit('setUnStartChapter', { chapter, groupid });
     }));
-    socket.on('finish', ({ groupid, userid, name }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('finish', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
-        yield dataApi.setFinished({ groupid, userid, name });
+        yield dataApi.setFinished({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setFinished', { userid, name, groupid });
+        redisconnection_1.io.to(groupid).emit('setFinished', { chapter, groupid });
     }));
-    socket.on('unFinish', ({ groupid, userid, name }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('unFinish', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
-        yield dataApi.setUnFinished({ groupid, userid, name });
+        yield dataApi.setUnFinished({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setUnFinished', { userid, name, groupid });
+        redisconnection_1.io.to(groupid).emit('setUnFinished', { chapter, groupid });
+    }));
+    socket.on('setDone', ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+        yield dataApi.setDone({ groupid, userid, chapter });
+        redisconnection_1.io.to(groupid).emit('setDone', { userid, chapter, groupid });
+    }));
+    socket.on('setUnDone', ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+        yield dataApi.setUnDone({ groupid, userid, chapter });
+        redisconnection_1.io.to(groupid).emit('setDone', { userid, chapter, groupid });
     }));
 });
-router.get('/bot', (req, res) => {
-    res.send({ bottest: 'tralalal' });
-});
+router.get('/testbot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = yield fetch('http://bot:5000/', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid: 'user-123', 'groupid': 'group-123', 'comment': 'Vind dit weer echt vreselijk. Van mij hoeft het niet warmer dan 20 graden te worden. Maar ben bang dat dit helemaal de verkeerde kant op gaat. De winters zijn we al vergeten. Dat bestaat al niet meer. Dit is gewoon een natuur ramp!' })
+    }).then(data => data.json()).catch(err => {
+        console.warn('--- error --- ');
+        console.warn(err);
+        res.send({ error: err });
+    });
+    if (data) {
+        res.send(data);
+    }
+}));
 router.get('/groupinfo', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // groups
     const groupKeys = yield redisconnection_1.redisPubClient.keys("group-*");
