@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "docker compose up -d && docker attach widt-app",
+    "tsc": "tsc",
     "dev2": "tsc --watch",
     "open": "docker attach widt-app",
     "edit": "docker exec -it widt-app sh",
