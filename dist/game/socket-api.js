@@ -190,6 +190,7 @@ redisconnection_1.io.on('connection', (socket) => {
     }));
 });
 router.get('/testbot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var startTime = performance.now();
     const data = yield fetch('http://bot:5000/', {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -200,7 +201,9 @@ router.get('/testbot', (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.send({ error: err });
     });
     if (data) {
-        res.send(data);
+        var endTime = performance.now();
+        var time = endTime - startTime;
+        res.send({ data, time });
     }
 }));
 router.get('/groupinfo', (req, res) => __awaiter(void 0, void 0, void 0, function* () {

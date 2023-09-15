@@ -197,6 +197,7 @@ io.on('connection', (socket) => {
 })
 
 router.get('/testbot', async (req, res) => {
+  var startTime = performance.now()
   const data = await fetch('http://bot:5000/', {
     method: 'POST',
     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
@@ -207,7 +208,9 @@ router.get('/testbot', async (req, res) => {
     res.send({ error: err })
   })
   if (data) {
-    res.send(data)
+    var endTime = performance.now()
+    var time = endTime - startTime
+    res.send({ data, time })
   }
 })
 
