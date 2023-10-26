@@ -4,10 +4,19 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { l1, l2, l3, l4, log } from './log'
 import express from 'express'
 import 'dotenv/config'
+import cors from 'cors'
 
 // const fetch = import('node-fetch');
 
 const router = express.Router()
+
+router.use(cors({ 
+  origin : [
+    new RegExp(/http:\/\/localhost$/),
+    'http:localhost',
+    new RegExp(/\.wie-is-de-trol\.nl$/)
+  ]
+}))
 
 router.use(express.urlencoded({ extended: true }));
 router.use(express.json())
@@ -104,7 +113,7 @@ io.on('connection', (socket) => {
     // add to group
     await dataApi.addToGroup({groupid, userid})
     // joinroom
-    console.log('createUser join group:', groupid)
+    console.log('createUser, join group:', groupid)
     socket.join(groupid)
     // update all
     io.to(groupid).emit('addUser', { userid, name })
@@ -113,8 +122,14 @@ io.on('connection', (socket) => {
     io.to(groupid).emit('groupUserData', groupUserData)
     // done
     if (cb) {
-      cb()
+      cb(true)
     }
+  })
+
+  socket.on('getUserData', async ({userid, groupid, name}, callback) => {
+    const user = await dataApi.getUser({ userid, groupid, name })
+    // io.emit('setUserData', user)
+    callback(user)
   })
 
   socket.on('removeUser', async ({ groupid, userid }, callback) => {
@@ -185,6 +200,18 @@ io.on('connection', (socket) => {
     // update state to group
     io.to(groupid).emit('setUnFinished', {chapter, groupid})
   })
+  socket.on('setShowResults', async ({ groupid, chapter }) => {
+    // write finished state
+    await dataApi.setShowResults({ groupid, chapter })
+    // update state to group
+    io.to(groupid).emit('setShowResults', {chapter, groupid})
+  })
+  socket.on('setUnShowResults', async ({ groupid, chapter }) => {
+    // write finished state
+    await dataApi.setUnShowResults({ groupid, chapter })
+    // update state to group
+    io.to(groupid).emit('setUnShowResults', {chapter, groupid})
+  })
   socket.on('setDone', async ({ groupid, userid, chapter }) => {
     await dataApi.setDone({ groupid, userid, chapter })
     io.to(groupid).emit('setDone', {userid, chapter, groupid})
@@ -244,10 +271,15 @@ router.post('/beatthebot', async (req, res) => {
       .then(response => response.json())
       .then(data => {
         let score = -1
-        if (data[0] && data[0][0] && data[0][0]['label'] === 'LABEL_1') {
-          score = data[0][0]['score']
-        } else {
-          score = data[0][1]['score']
+        // if (data[0] && data[0][0] && data[0][0]['label'] === 'LABEL_1') {
+        //   score = data[0][0]['score']
+        // } else {
+        //   score = data[0][1]['score']
+        // }
+        for (let i in data[0]) {
+          if (data[0][i]['label'] === 'LABEL_1') {
+            score = data[0][i]['score']
+          }
         }
         res.send({ score: score })
       });

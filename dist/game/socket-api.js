@@ -41,8 +41,16 @@ const dataApi = __importStar(require("./data-api"));
 const redis_adapter_1 = require("@socket.io/redis-adapter");
 const express_1 = __importDefault(require("express"));
 require("dotenv/config");
+const cors_1 = __importDefault(require("cors"));
 // const fetch = import('node-fetch');
 const router = express_1.default.Router();
+router.use((0, cors_1.default)({
+    origin: [
+        new RegExp(/http:\/\/localhost$/),
+        'http:localhost',
+        new RegExp(/\.wie-is-de-trol\.nl$/)
+    ]
+}));
 router.use(express_1.default.urlencoded({ extended: true }));
 router.use(express_1.default.json());
 // launch socket server
@@ -113,7 +121,7 @@ redisconnection_1.io.on('connection', (socket) => {
         // add to group
         yield dataApi.addToGroup({ groupid, userid });
         // joinroom
-        console.log('createUser join group:', groupid);
+        console.log('createUser, join group:', groupid);
         socket.join(groupid);
         // update all
         redisconnection_1.io.to(groupid).emit('addUser', { userid, name });
@@ -122,8 +130,13 @@ redisconnection_1.io.on('connection', (socket) => {
         redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
         // done
         if (cb) {
-            cb();
+            cb(true);
         }
+    }));
+    socket.on('getUserData', ({ userid, groupid, name }, callback) => __awaiter(void 0, void 0, void 0, function* () {
+        const user = yield dataApi.getUser({ userid, groupid, name });
+        // io.emit('setUserData', user)
+        callback(user);
     }));
     socket.on('removeUser', ({ groupid, userid }, callback) => __awaiter(void 0, void 0, void 0, function* () {
         const done = yield dataApi.removeUser({ groupid, userid }).catch(() => {
@@ -179,6 +192,18 @@ redisconnection_1.io.on('connection', (socket) => {
         yield dataApi.setUnFinished({ groupid, chapter });
         // update state to group
         redisconnection_1.io.to(groupid).emit('setUnFinished', { chapter, groupid });
+    }));
+    socket.on('setShowResults', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+        // write finished state
+        yield dataApi.setShowResults({ groupid, chapter });
+        // update state to group
+        redisconnection_1.io.to(groupid).emit('setShowResults', { chapter, groupid });
+    }));
+    socket.on('setUnShowResults', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+        // write finished state
+        yield dataApi.setUnShowResults({ groupid, chapter });
+        // update state to group
+        redisconnection_1.io.to(groupid).emit('setUnShowResults', { chapter, groupid });
     }));
     socket.on('setDone', ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         yield dataApi.setDone({ groupid, userid, chapter });
@@ -236,11 +261,15 @@ router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, funct
         .then(response => response.json())
         .then(data => {
         let score = -1;
-        if (data[0] && data[0][0] && data[0][0]['label'] === 'LABEL_1') {
-            score = data[0][0]['score'];
-        }
-        else {
-            score = data[0][1]['score'];
+        // if (data[0] && data[0][0] && data[0][0]['label'] === 'LABEL_1') {
+        //   score = data[0][0]['score']
+        // } else {
+        //   score = data[0][1]['score']
+        // }
+        for (let i in data[0]) {
+            if (data[0][i]['label'] === 'LABEL_1') {
+                score = data[0][i]['score'];
+            }
         }
         res.send({ score: score });
     });

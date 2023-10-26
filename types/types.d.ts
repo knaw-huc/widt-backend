@@ -5,7 +5,8 @@ export interface GROUP {
   position: number,
   started: Array<string>,
   users: Array<string>,
-  finished: Array<string>
+  finished: Array<string>,
+  showResults: Array<string>
 }
 
 export interface USER {
@@ -32,7 +33,8 @@ export interface GroupState {
   connected: boolean,
   users: Array<USER>,
   finished: Array<string>,
-  started: Array<string>
+  started: Array<string>,
+  showResults: Array<string>,
 }
 
 export interface UserState {
@@ -48,7 +50,8 @@ export interface UserState {
   answers: Answers,
   done: Array<string>,
   finished: Array<string>,
-  started: Array<string>
+  started: Array<string>,
+  showResults: Array<string>
 }
 
 // EVENTS
@@ -65,12 +68,15 @@ export interface ServerToClientEvents {
   // custom
   goto: (data: any) => void;
   addUser: (data: any) => void;
+  setUserData: (data: USER) => void;
   groupUserData: (data: Array<USER>) => void;
-  loadGroupData: (data: any) => void;
+  loadGroupData: (data: GROUP) => void;
   setStartChapter: (object: {groupid:string, chapter:string}) => void;
   setUnStartChapter: (object: {groupid:string, chapter:string}) => void;
   setFinished: (data: { groupid: string, chapter: string }) => void;
   setUnFinished: (data: { groupid: string, chapter: string }) => void;
+  setShowResults: (data: { groupid: string, chapter: string}) => void
+  setUnShowResults: (data: { groupid: string, chapter: string}) => void
   updateAnswer: (data: any) => void;
   setDone: (data: { groupid: string, userid: string, chapter: string }) => void;
   setUnDone: (data: { groupid: string, userid: string, chapter: string }) => void;
@@ -81,6 +87,7 @@ export interface ClientToServerEvents {
   joinRoom: (Object: { groupid: string, userid?: string}) => void;
   getAllUserData: (Object: { groupid: string}) => void;
   getGroupData: (Object: { groupid: string }) => void;
+  getUserData: (Object: {userid: string, groupid: string, name: string}, cb?: (user?:USER) => void) => void;
   // continue
   next: (Object: {groupid: string, position?: number}, cb?: () => void) => void;
   prev: (Object: {groupid: string},  cb?: () => void) => void;
@@ -88,8 +95,10 @@ export interface ClientToServerEvents {
   unStartChapter: (Object: { groupid: string, chapter: string }) => void;
   finish: (Object: { groupid: string, chapter: string }) => void;
   unFinish: (Object: { groupid: string, chapter: string }) => void;
+  setShowResults: (data: { groupid: string, chapter: string}) => void;
+  setUnShowResults: (data: { groupid: string, chapter: string}) => void;
   setAnswer: (Object: { groupid: string, userid: string, chapter: string, k: number, answer: any, name: string }) => void;
-  createUser: (Object: { groupid: string, userid: string, name:string }, cb?: () => void) => void;
+  createUser: (Object: { groupid: string, userid: string, name:string }, cb?: (success: boolean) => void) => void;
   removeUser: (Object: { groupid: string, userid: string }, cb?: (parameter?: boolean) => void) => void;
   test: (data?: any) => void;
   setDone: (Object: { groupid: string, userid: string, chapter: string }) => void;

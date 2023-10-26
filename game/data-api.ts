@@ -83,7 +83,8 @@ export async function getGroup(groupid:string) {
     position: 0,
     started: [],
     users: [],
-    finished: []
+    finished: [],
+    showResults: []
   }
   await writeGroup(emptyGroup)
   return emptyGroup
@@ -173,7 +174,22 @@ export async function setFinished({groupid, chapter}:{groupid:string, chapter:st
 export async function setUnFinished({ groupid, chapter }:{groupid:string, chapter:string}) {
   const group = await getGroup(groupid)
   if (!group.finished) { group.finished = [] }
-  if (group.finished.includes) { group.finished.splice(group.finished.indexOf(chapter), 1) }
+  if (group.finished.includes(chapter)) { group.finished.splice(group.finished.indexOf(chapter), 1) }
+  await writeGroup(group)
+}
+
+export async function setShowResults({groupid, chapter}:{groupid:string, chapter:string}) {
+  const group = await getGroup(groupid)
+  if (!group.showResults) { group.showResults = [] }
+  if (!group.showResults.includes(chapter)) {
+    group.showResults.push(chapter)
+  }
+  await writeGroup(group)
+}
+export async function setUnShowResults({ groupid, chapter }:{groupid:string, chapter:string}) {
+  const group = await getGroup(groupid)
+  if (!group.showResults) { group.showResults = [] }
+  if (group.showResults.includes(chapter)) { group.showResults.splice(group.showResults.indexOf(chapter), 1) }
   await writeGroup(group)
 }
 

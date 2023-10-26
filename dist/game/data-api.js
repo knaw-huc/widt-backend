@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
+exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
 const redisconnection_1 = require("./redisconnection");
 function getUser({ userid, groupid, name }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -96,7 +96,8 @@ function getGroup(groupid) {
             position: 0,
             started: [],
             users: [],
-            finished: []
+            finished: [],
+            showResults: []
         };
         yield writeGroup(emptyGroup);
         return emptyGroup;
@@ -202,13 +203,39 @@ function setUnFinished({ groupid, chapter }) {
         if (!group.finished) {
             group.finished = [];
         }
-        if (group.finished.includes) {
+        if (group.finished.includes(chapter)) {
             group.finished.splice(group.finished.indexOf(chapter), 1);
         }
         yield writeGroup(group);
     });
 }
 exports.setUnFinished = setUnFinished;
+function setShowResults({ groupid, chapter }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const group = yield getGroup(groupid);
+        if (!group.showResults) {
+            group.showResults = [];
+        }
+        if (!group.showResults.includes(chapter)) {
+            group.showResults.push(chapter);
+        }
+        yield writeGroup(group);
+    });
+}
+exports.setShowResults = setShowResults;
+function setUnShowResults({ groupid, chapter }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const group = yield getGroup(groupid);
+        if (!group.showResults) {
+            group.showResults = [];
+        }
+        if (group.showResults.includes(chapter)) {
+            group.showResults.splice(group.showResults.indexOf(chapter), 1);
+        }
+        yield writeGroup(group);
+    });
+}
+exports.setUnShowResults = setUnShowResults;
 function setStartChapter({ groupid, chapter }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
