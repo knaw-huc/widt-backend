@@ -30,7 +30,7 @@ services:
     command: sh -c "pip3 install -r requirements.txt && python run.py"
     networks:
       - traefik-public2
-  app:
+  backendapp:
     container_name: widt-app
     image: node:18.1.0-alpine
     # image: timbru31/node-alpine-git
