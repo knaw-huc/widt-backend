@@ -13,5 +13,6 @@ exports.io = new socket_io_1.Server(2224, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    allowEIO3: true
 });

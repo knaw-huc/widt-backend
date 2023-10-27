@@ -14,5 +14,6 @@ export const io = new Server<ClientToServerEvents, ServerToClientEvents>(2224, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  allowEIO3: true
 })
