@@ -16,7 +16,8 @@ router.use(cors({
     'http:localhost',
     new RegExp(/\.wie-is-de-trol\.nl$/),
     new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
-  ]
+  ],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
 }))
 
 router.use(express.urlencoded({ extended: true }));
