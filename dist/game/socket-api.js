@@ -50,7 +50,8 @@ router.use((0, cors_1.default)({
         'http:localhost',
         new RegExp(/\.wie-is-de-trol\.nl$/),
         new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
-    ]
+    ],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
 }));
 router.use(express_1.default.urlencoded({ extended: true }));
 router.use(express_1.default.json());
@@ -247,6 +248,9 @@ router.get('/groupinfo', (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     // send
     res.send({ groups, users });
+}));
+router.get('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.send({ test: "ok" });
 }));
 router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body || !req.body.text) {

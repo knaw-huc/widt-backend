@@ -16,7 +16,8 @@ router.use(cors({
     'http:localhost',
     new RegExp(/\.wie-is-de-trol\.nl$/),
     new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
-  ]
+  ],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
 }))
 
 router.use(express.urlencoded({ extended: true }));
@@ -253,6 +254,10 @@ router.get('/groupinfo', async (req, res) => {
   for (let i in userKeys) { users.push(JSON.parse(await redisPubClient.get(userKeys[i]))) }
   // send
   res.send({groups, users})
+})
+
+router.get('/beatthebot', async (req, res) => {
+  res.send({test: "ok"})
 })
 
 router.post('/beatthebot', async (req, res) => {
