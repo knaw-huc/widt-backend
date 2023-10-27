@@ -14,7 +14,8 @@ router.use(cors({
   origin : [
     new RegExp(/http:\/\/localhost$/),
     'http:localhost',
-    new RegExp(/\.wie-is-de-trol\.nl$/)
+    new RegExp(/\.wie-is-de-trol\.nl$/),
+    new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
   ]
 }))
 

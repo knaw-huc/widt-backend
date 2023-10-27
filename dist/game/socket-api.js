@@ -48,7 +48,8 @@ router.use((0, cors_1.default)({
     origin: [
         new RegExp(/http:\/\/localhost$/),
         'http:localhost',
-        new RegExp(/\.wie-is-de-trol\.nl$/)
+        new RegExp(/\.wie-is-de-trol\.nl$/),
+        new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
     ]
 }));
 router.use(express_1.default.urlencoded({ extended: true }));
