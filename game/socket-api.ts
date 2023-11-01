@@ -261,7 +261,7 @@ router.get('/beatthebot', async (req, res) => {
   const data = await fetch('http://bot:5000/', {
     method: 'POST',
     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
-    body: JSON.stringify({userid: 'user-123', 'groupid': 'group-123', 'comment': 'Ik vind de conclusie van dit stuk wel goed. Het moet een en en en verhaal worden. Zonen energie, kernenergie, wind energie en waterstof. Dan hoef je niet het hele land vol te pompen met zonneparken en windmolens, maar heb je niet op iedere straathoek een kerncentrale of kernafval opslag. Kost een hoop, zeker weten. Maar dan ben je wel van gas, kolen en biomassa af.'})
+    body: JSON.stringify({userid: 'user-123', 'groupid': 'group-123', 'comment': 'Kunnen we nu eindelijk aan de ijstijd beginnen? We hebben het nu al wel lang genoeg uitgesteld en het begint mij een beetje te heet onder de voeten te worden.'})
   }).then(data => data.json()).catch(err => {
     console.warn(err)
     res.send({ error: err })
@@ -269,7 +269,7 @@ router.get('/beatthebot', async (req, res) => {
   if (data) {
     var endTime = performance.now()
     var time = endTime - startTime
-    res.send({ data, time })
+    res.send({ score: data.value, time })
   }
 })
 
@@ -292,7 +292,7 @@ router.post('/beatthebot', async (req, res) => {
   if (data) {
     var endTime = performance.now()
     var time = endTime - startTime
-    res.send({ data, time })
+    res.send({ score: data.value, time })
   }
 })
 
