@@ -257,10 +257,46 @@ router.get('/groupinfo', async (req, res) => {
 })
 
 router.get('/beatthebot', async (req, res) => {
-  res.send({test: "ok"})
+  var startTime = performance.now()
+  const data = await fetch('http://bot:5000/', {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    body: JSON.stringify({userid: 'user-123', 'groupid': 'group-123', 'comment': 'Ik vind de conclusie van dit stuk wel goed. Het moet een en en en verhaal worden. Zonen energie, kernenergie, wind energie en waterstof. Dan hoef je niet het hele land vol te pompen met zonneparken en windmolens, maar heb je niet op iedere straathoek een kerncentrale of kernafval opslag. Kost een hoop, zeker weten. Maar dan ben je wel van gas, kolen en biomassa af.'})
+  }).then(data => data.json()).catch(err => {
+    console.warn(err)
+    res.send({ error: err })
+  })
+  if (data) {
+    var endTime = performance.now()
+    var time = endTime - startTime
+    res.send({ data, time })
+  }
 })
 
 router.post('/beatthebot', async (req, res) => {
+
+  if (!req.body || !req.body.text) {
+    res.send('No input.')
+    return false
+  }
+
+  var startTime = performance.now()
+  const data = await fetch('http://bot:5000/', {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json'},
+    body: JSON.stringify({userid: 'user-123', 'groupid': 'group-123', 'comment': req.body.text})
+  }).then(data => data.json()).catch(err => {
+    console.warn(err)
+    res.send({ error: err })
+  })
+  if (data) {
+    var endTime = performance.now()
+    var time = endTime - startTime
+    res.send({ data, time })
+  }
+})
+
+router.post('/beatthebot_external', async (req, res) => {
 
   if (!req.body || !req.body.text) {
     res.send('No input.')
