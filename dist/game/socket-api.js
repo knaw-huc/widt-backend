@@ -270,11 +270,12 @@ router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.send('No input.');
         return false;
     }
+    const comment = yield dataApi.writeComment({ text: req.body.text, userid: req.body.userid || 'none', groupid: req.body.groupid || 'none' });
     var startTime = performance.now();
     const data = yield fetch('http://bot:5000/', {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userid: 'user-123', 'groupid': 'group-123', 'comment': req.body.text })
+        body: JSON.stringify({ userid: req.body.userid || 'none', 'groupid': req.body.groupid || 'none', 'comment': req.body.text })
     }).then(data => data.json()).catch(err => {
         console.warn(err);
         res.send({ error: err });
@@ -282,6 +283,10 @@ router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, funct
     if (data) {
         var endTime = performance.now();
         var time = endTime - startTime;
+        const newcomment = JSON.parse(JSON.stringify(comment));
+        newcomment.duration = time;
+        newcomment.score = data.value;
+        yield dataApi.writeComment(newcomment);
         res.send({ score: data.value, time });
     }
 }));

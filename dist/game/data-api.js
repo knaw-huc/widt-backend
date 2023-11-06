@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
+exports.writeComment = exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
 const redisconnection_1 = require("./redisconnection");
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("./connection"));
@@ -36,11 +36,22 @@ const USERS = sequelize.define('users', {
     answers: { type: sequelize_1.DataTypes.JSON },
     done: { type: sequelize_1.DataTypes.JSON }
 });
+const COMMENTS = sequelize.define('comments', {
+    id: { type: sequelize_1.DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    text: { type: sequelize_1.DataTypes.TEXT },
+    groupid: { type: sequelize_1.DataTypes.STRING },
+    userid: { type: sequelize_1.DataTypes.JSON },
+    score: { type: sequelize_1.DataTypes.STRING },
+    duration: { type: sequelize_1.DataTypes.STRING }
+});
 USERS.sync().catch(err => {
     console.warn('---\nCannot create table "users".\n---');
 });
 GROUPS.sync().catch(err => {
     console.warn('---\nCannot create table "groups".\n---');
+});
+COMMENTS.sync().catch(err => {
+    console.warn('---\nCannot create table "comments".\n---');
 });
 function getUser({ userid, groupid, name }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -323,3 +334,23 @@ function setUnDone({ groupid, userid, chapter }) {
     });
 }
 exports.setUnDone = setUnDone;
+function writeComment({ text, groupid, userid, id, duration }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commentObject = { text };
+        if (groupid) {
+            commentObject.groupid = groupid;
+        }
+        if (userid) {
+            commentObject.userid = userid;
+        }
+        if (duration) {
+            commentObject.duration = duration;
+        }
+        if (id) {
+            commentObject.id = id;
+        }
+        yield COMMENTS.upsert(commentObject);
+        return commentObject;
+    });
+}
+exports.writeComment = writeComment;

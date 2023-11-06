@@ -26,12 +26,25 @@ const USERS = sequelize.define('users', {
   done: { type: DataTypes.JSON }
 });
 
+const COMMENTS = sequelize.define('comments', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  text: { type: DataTypes.TEXT },
+  groupid: { type: DataTypes.STRING },
+  userid: { type: DataTypes.JSON },
+  score: { type: DataTypes.STRING },
+  duration: { type: DataTypes.STRING}
+});
+
 USERS.sync().catch(err => {
   console.warn('---\nCannot create table "users".\n---')
 })
 
 GROUPS.sync().catch(err => {
   console.warn('---\nCannot create table "groups".\n---')
+})
+
+COMMENTS.sync().catch(err => {
+  console.warn('---\nCannot create table "comments".\n---')
 })
 
 export async function getUser({ userid, groupid, name }: {userid: string, groupid: string, name?: string}) {
@@ -259,4 +272,14 @@ export async function setUnDone({ groupid, userid, chapter }: { groupid: string,
     user.done.splice(user.done.indexOf(chapter), 1)
   }
   await writeUser(user)
+}
+
+export async function writeComment({ text, groupid, userid, id, duration }: { text: string, groupid?: string, userid?: string, score?: string | number, id?: number, duration?: string | number }) {
+  const commentObject:{ text: string, groupid?: string, userid?: string, score?: string | number, id?: number, duration?: string | number } = { text }
+  if (groupid) { commentObject.groupid = groupid }
+  if (userid) { commentObject.userid = userid }
+  if (duration) { commentObject.duration = duration }
+  if (id) { commentObject.id = id }
+  await COMMENTS.upsert(commentObject)
+  return commentObject
 }
