@@ -46,12 +46,15 @@ const COMMENTS = sequelize.define('comments', {
 });
 USERS.sync().catch(err => {
     console.warn('---\nCannot create table "users".\n---');
+    console.warn(err);
 });
 GROUPS.sync().catch(err => {
     console.warn('---\nCannot create table "groups".\n---');
+    console.warn(err);
 });
 COMMENTS.sync().catch(err => {
     console.warn('---\nCannot create table "comments".\n---');
+    console.warn(err);
 });
 function getUser({ userid, groupid, name }) {
     return __awaiter(this, void 0, void 0, function* () {
