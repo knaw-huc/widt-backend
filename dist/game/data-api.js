@@ -8,9 +8,40 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
 const redisconnection_1 = require("./redisconnection");
+const sequelize_1 = require("sequelize");
+const connection_1 = __importDefault(require("./connection"));
+const sequelize = new sequelize_1.Sequelize(connection_1.default.database, process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, {
+    host: connection_1.default.host,
+    // port: connection.port,
+    dialect: 'mariadb'
+});
+const GROUPS = sequelize.define('groups', {
+    groupid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
+    position: { type: sequelize_1.DataTypes.STRING },
+    started: { type: sequelize_1.DataTypes.JSON },
+    users: { type: sequelize_1.DataTypes.JSON },
+    finished: { type: sequelize_1.DataTypes.JSON },
+    showresults: { type: sequelize_1.DataTypes.JSON },
+});
+const USERS = sequelize.define('users', {
+    userid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
+    groupid: { type: sequelize_1.DataTypes.JSON },
+    name: { type: sequelize_1.DataTypes.STRING },
+    answers: { type: sequelize_1.DataTypes.JSON },
+    done: { type: sequelize_1.DataTypes.JSON }
+});
+USERS.sync().catch(err => {
+    console.warn('---\nCannot create table "users".\n---');
+});
+GROUPS.sync().catch(err => {
+    console.warn('---\nCannot create table "groups".\n---');
+});
 function getUser({ userid, groupid, name }) {
     return __awaiter(this, void 0, void 0, function* () {
         /*
@@ -146,13 +177,14 @@ function writeUser(user, service) {
         }
         // sql
         if (!service || service === 'sql') {
-            // await sql.create(emptyGroup)
+            yield USERS.upsert(user);
         }
     });
 }
 exports.writeUser = writeUser;
 function writeGroup(group, service) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('write group!');
         // redis
         if (!service || service === 'redis') {
             // l4('write group redis', group)
@@ -160,7 +192,7 @@ function writeGroup(group, service) {
         }
         // sql
         if (!service || service === 'sql') {
-            // await sql.create(emptyGroup)
+            yield GROUPS.upsert(group);
         }
         // console.log('write group', group)
     });
@@ -169,18 +201,15 @@ exports.writeGroup = writeGroup;
 function writeAnswer({ groupid, userid, chapter, k, answer, name }, service) {
     return __awaiter(this, void 0, void 0, function* () {
         // redis
-        if (!service || service === 'redis') {
-            const user = yield getUser({ userid, groupid, name });
-            if (!user) {
-                throw Error(`Can't find user ${userid} to write answer ${k}, ${answer}`);
-            }
-            if (!(chapter in user.answers)) {
-                user.answers[chapter] = [];
-            }
-            user.answers[chapter][k] = answer;
-            // console.log(JSON.stringify(user))
-            yield redisconnection_1.redisPubClient.set(`user-${user.userid}`, JSON.stringify(user));
+        const user = yield getUser({ userid, groupid, name });
+        if (!user) {
+            throw Error(`Can't find user ${userid} to write answer ${k}, ${answer}`);
         }
+        if (!(chapter in user.answers)) {
+            user.answers[chapter] = [];
+        }
+        user.answers[chapter][k] = answer;
+        yield writeUser(user);
     });
 }
 exports.writeAnswer = writeAnswer;
