@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
     console.log('createUser, join group:', groupid)
     socket.join(groupid)
     // update all
-    io.to(groupid).emit('addUser', { userid, name })
+    io.to(groupid).emit('addUser', { userid, groupid, name })
     // send groupuserdata
     const groupUserData = await dataApi.getGroupUserData(groupid)
     io.to(groupid).emit('groupUserData', groupUserData)

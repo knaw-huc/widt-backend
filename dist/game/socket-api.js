@@ -126,7 +126,7 @@ redisconnection_1.io.on('connection', (socket) => {
         console.log('createUser, join group:', groupid);
         socket.join(groupid);
         // update all
-        redisconnection_1.io.to(groupid).emit('addUser', { userid, name });
+        redisconnection_1.io.to(groupid).emit('addUser', { userid, groupid, name });
         // send groupuserdata
         const groupUserData = yield dataApi.getGroupUserData(groupid);
         redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
