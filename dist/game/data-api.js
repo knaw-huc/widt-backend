@@ -351,7 +351,7 @@ function writeComment({ text, groupid, userid, id, duration }) {
         if (id) {
             commentObject.id = id;
         }
-        const ret = yield COMMENTS.upsert(commentObject, { returning: true });
+        const ret = yield COMMENTS.upsert(commentObject, { returning: ['*'] });
         console.log('============');
         console.log(ret);
         console.log('============');
