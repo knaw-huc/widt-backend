@@ -352,9 +352,9 @@ function writeComment({ text, groupid, userid, id, duration }) {
             commentObject.id = id;
         }
         const ret = yield COMMENTS.upsert(commentObject, { returning: ['*'] });
-        console.log('============');
-        console.log(ret);
-        console.log('============');
+        // console.log('============')
+        // console.log(ret)
+        // console.log('============')
         return commentObject;
     });
 }
