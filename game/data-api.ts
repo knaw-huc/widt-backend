@@ -282,7 +282,7 @@ export async function writeComment({ text, groupid, userid, id, duration }: { te
   if (userid) { commentObject.userid = userid }
   if (duration) { commentObject.duration = duration }
   if (id) { commentObject.id = id }
-  const ret = await COMMENTS.upsert(commentObject)
+  const ret = await COMMENTS.upsert(commentObject, { returning: true })
   console.log('============')
   console.log(ret)
   console.log('============')
