@@ -198,7 +198,6 @@ function writeUser(user, service) {
 exports.writeUser = writeUser;
 function writeGroup(group, service) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('write group!');
         // redis
         if (!service || service === 'redis') {
             // l4('write group redis', group)
@@ -206,7 +205,7 @@ function writeGroup(group, service) {
         }
         // sql
         if (!service || service === 'sql') {
-            yield GROUPS.upsert(group);
+            const ret = yield GROUPS.upsert(group);
         }
         // console.log('write group', group)
     });
@@ -352,7 +351,10 @@ function writeComment({ text, groupid, userid, id, duration }) {
         if (id) {
             commentObject.id = id;
         }
-        yield COMMENTS.upsert(commentObject);
+        const ret = yield COMMENTS.upsert(commentObject);
+        console.log('============');
+        console.log(ret);
+        console.log('============');
         return commentObject;
     });
 }

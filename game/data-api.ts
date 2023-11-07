@@ -186,7 +186,6 @@ export async function writeUser(user:USER, service?:string) {
 
 export async function writeGroup(group: GROUP, service?: string) {
   
-  console.log('write group!')
   // redis
   if (!service || service === 'redis') {
     // l4('write group redis', group)
@@ -194,7 +193,7 @@ export async function writeGroup(group: GROUP, service?: string) {
   }
   // sql
   if (!service || service === 'sql') {
-    await GROUPS.upsert(group)
+    const ret = await GROUPS.upsert(group)
   }
   // console.log('write group', group)
 }
@@ -283,6 +282,9 @@ export async function writeComment({ text, groupid, userid, id, duration }: { te
   if (userid) { commentObject.userid = userid }
   if (duration) { commentObject.duration = duration }
   if (id) { commentObject.id = id }
-  await COMMENTS.upsert(commentObject)
+  const ret = await COMMENTS.upsert(commentObject)
+  console.log('============')
+  console.log(ret)
+  console.log('============')
   return commentObject
 }
