@@ -27,7 +27,7 @@ const GROUPS = sequelize.define('groups', {
     started: { type: sequelize_1.DataTypes.JSON },
     users: { type: sequelize_1.DataTypes.JSON },
     finished: { type: sequelize_1.DataTypes.JSON },
-    showresults: { type: sequelize_1.DataTypes.JSON },
+    showResults: { type: sequelize_1.DataTypes.JSON },
 });
 const USERS = sequelize.define('users', {
     userid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
@@ -185,27 +185,40 @@ function addToGroup({ groupid, userid }) {
 exports.addToGroup = addToGroup;
 function writeUser(user, service) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!user.userid) {
+            console.log('--- writeUser: missing userid ---');
+            return false;
+        }
         // redis
         if (!service || service === 'redis') {
             yield redisconnection_1.redisPubClient.set(`user-${user.userid}`, JSON.stringify(user));
         }
         // sql
         if (!service || service === 'sql') {
-            yield USERS.upsert(user);
+            yield USERS.upsert(user).catch(err => {
+                console.log('--- writeUser sql error ---');
+                console.log(err);
+            });
         }
     });
 }
 exports.writeUser = writeUser;
 function writeGroup(group, service) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!group.groupid) {
+            console.log('--- missing group id ---');
+            return false;
+        }
         // redis
         if (!service || service === 'redis') {
             // l4('write group redis', group)
-            yield redisconnection_1.redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group));
+            yield redisconnection_1.redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group)).catch();
         }
         // sql
         if (!service || service === 'sql') {
-            const ret = yield GROUPS.upsert(group);
+            const ret = yield GROUPS.upsert(group).catch(err => {
+                console.log('--- writeGroup sql error ---');
+            });
         }
         // console.log('write group', group)
     });

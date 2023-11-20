@@ -1,7 +1,7 @@
 import {redisPubClient} from './redisconnection'
 import { Sequelize, DataTypes } from 'sequelize'
 import connection from './connection'
-import type { USER, GROUP } from '../types/types'
+import type { USER, GROUP, USERTABLE, GROUPTABLE } from '../types/types'
 
 const sequelize = new Sequelize(connection.database, process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, {
   host: connection.host,
@@ -9,16 +9,16 @@ const sequelize = new Sequelize(connection.database, process.env.MYSQL_USER, pro
   dialect: 'mariadb'
 });
 
-const GROUPS = sequelize.define('groups', {
+const GROUPS = sequelize.define<GROUPTABLE>('groups', {
   groupid: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
   position: { type: DataTypes.STRING},
   started: { type: DataTypes.JSON },
   users: { type: DataTypes.JSON },
   finished: { type: DataTypes.JSON },
-  showresults: { type: DataTypes.JSON },
+  showResults: { type: DataTypes.JSON },
 });
 
-const USERS = sequelize.define('users', {
+const USERS = sequelize.define<USERTABLE>('users', {
   userid: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
   groupid: { type: DataTypes.JSON },
   name: { type: DataTypes.STRING },
@@ -172,28 +172,42 @@ export async function addToGroup ({groupid, userid}:{groupid:string, userid: str
   return true
 }
 
-export async function writeUser(user:USER, service?:string) {
+export async function writeUser(user: USER, service?: string) {
+  if (!user.userid) {
+    console.log('--- writeUser: missing userid ---')
+    return false
+  }
   // redis
   if (!service || service === 'redis') {
     await redisPubClient.set(`user-${user.userid}`, JSON.stringify(user))
   }
   // sql
   if (!service || service === 'sql') {
-    await USERS.upsert(user)
+    await USERS.upsert(user).catch(err => {
+      console.log('--- writeUser sql error ---')
+      console.log(err)
+    })
   }
 
 }
 
 export async function writeGroup(group: GROUP, service?: string) {
+
+  if (!group.groupid) {
+    console.log('--- missing group id ---')
+    return false
+  }
   
   // redis
   if (!service || service === 'redis') {
     // l4('write group redis', group)
-    await redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group))
+    await redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group)).catch()
   }
   // sql
   if (!service || service === 'sql') {
-    const ret = await GROUPS.upsert(group)
+    const ret = await GROUPS.upsert(group).catch(err => {
+      console.log('--- writeGroup sql error ---')
+    })
   }
   // console.log('write group', group)
 }

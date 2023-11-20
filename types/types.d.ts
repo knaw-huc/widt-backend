@@ -1,3 +1,5 @@
+import {Model, InferAttributes, InferCreationAttributes} from 'sequelize'
+
 // INTERFACES
 
 export interface GROUP {
@@ -15,6 +17,17 @@ export interface USER {
   name: string,
   answers: Answers
   done: Array<string>
+}
+
+export interface USERTABLE extends Model<Partial<USER>> {
+  // Some fields are optional when calling UserModel.create() or UserModel.build()
+  // userid: CreationOptional<number>;
+  // name: string;
+}
+export interface GROUPTABLE extends Model<Partial<GROUP>> {
+  // Some fields are optional when calling UserModel.create() or UserModel.build()
+  // userid: CreationOptional<number>;
+  // name: string;
 }
 
 export interface Answers {
