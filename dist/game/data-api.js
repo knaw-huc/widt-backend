@@ -12,16 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.writeComment = exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
+exports.backup = exports.writeComment = exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
 const redisconnection_1 = require("./redisconnection");
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("./connection"));
 const sequelize = new sequelize_1.Sequelize(connection_1.default.database, process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, {
     host: connection_1.default.host,
     // port: connection.port,
-    dialect: 'mariadb'
+    dialect: "mariadb",
 });
-const GROUPS = sequelize.define('groups', {
+const GROUPS = sequelize.define("groups", {
     groupid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
     position: { type: sequelize_1.DataTypes.STRING },
     started: { type: sequelize_1.DataTypes.JSON },
@@ -29,34 +29,34 @@ const GROUPS = sequelize.define('groups', {
     finished: { type: sequelize_1.DataTypes.JSON },
     showResults: { type: sequelize_1.DataTypes.JSON },
 });
-const USERS = sequelize.define('users', {
+const USERS = sequelize.define("users", {
     userid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
     groupid: { type: sequelize_1.DataTypes.JSON },
     name: { type: sequelize_1.DataTypes.STRING },
     answers: { type: sequelize_1.DataTypes.JSON },
-    done: { type: sequelize_1.DataTypes.JSON }
+    done: { type: sequelize_1.DataTypes.JSON },
 });
-const COMMENTS = sequelize.define('comments', {
+const COMMENTS = sequelize.define("comments", {
     id: { type: sequelize_1.DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     text: { type: sequelize_1.DataTypes.TEXT },
     groupid: { type: sequelize_1.DataTypes.STRING },
     userid: { type: sequelize_1.DataTypes.JSON },
     score: { type: sequelize_1.DataTypes.STRING },
-    duration: { type: sequelize_1.DataTypes.STRING }
+    duration: { type: sequelize_1.DataTypes.STRING },
 });
-USERS.sync().catch(err => {
+USERS.sync().catch((err) => {
     console.warn('---\nCannot create table "users".\n---');
     console.warn(err);
 });
-GROUPS.sync().catch(err => {
+GROUPS.sync().catch((err) => {
     console.warn('---\nCannot create table "groups".\n---');
     console.warn(err);
 });
-COMMENTS.sync().catch(err => {
+COMMENTS.sync().catch((err) => {
     console.warn('---\nCannot create table "comments".\n---');
     console.warn(err);
 });
-function getUser({ userid, groupid, name }) {
+function getUser({ userid, groupid, name, }) {
     return __awaiter(this, void 0, void 0, function* () {
         /*
         get or create
@@ -71,37 +71,37 @@ function getUser({ userid, groupid, name }) {
             // set redisgroup
             if (user) {
                 // fill with group data
-                yield writeUser(user, 'redis');
+                yield writeUser(user, "redis");
             }
         }
         else {
             user = JSON.parse(redisUser);
         }
         // return group if found
-        if (typeof user === 'object') {
+        if (typeof user === "object") {
             return user;
         }
-        // create user if no redis && no mysql: 
+        // create user if no redis && no mysql:
         const emptyUser = {
             userid,
             groupid,
             name,
             answers: {},
-            done: []
+            done: [],
         };
         yield writeUser(emptyUser);
         return emptyUser;
     });
 }
 exports.getUser = getUser;
-function removeUser({ groupid, userid }) {
+function removeUser({ groupid, userid, }) {
     return __awaiter(this, void 0, void 0, function* () {
         // remove from group
         const group = yield getGroup(groupid);
         if (!group) {
-            throw Error('Group does not exist.');
+            throw Error("Group does not exist.");
         }
-        group.users = group.users.filter(x => {
+        group.users = group.users.filter((x) => {
             return x !== userid;
         });
         if (group) {
@@ -125,24 +125,24 @@ function getGroup(groupid) {
             // set redisgroup
             if (group) {
                 // fill with group data
-                yield writeGroup(group, 'redis');
+                yield writeGroup(group, "redis");
             }
         }
         else {
             group = JSON.parse(redisGroup);
         }
         // return group if found
-        if (typeof group === 'object') {
+        if (typeof group === "object") {
             return group;
         }
-        // create group if no redis && no mysql: 
+        // create group if no redis && no mysql:
         const emptyGroup = {
             groupid,
             position: 0,
             started: [],
             users: [],
             finished: [],
-            showResults: []
+            showResults: [],
         };
         yield writeGroup(emptyGroup);
         return emptyGroup;
@@ -154,12 +154,12 @@ function getGroupUserData(groupid) {
         const data = [];
         const group = yield getGroup(groupid);
         if (!group) {
-            throw Error('Group does not exist.');
+            throw Error("Group does not exist.");
         }
         for (let i in group.users) {
             const userid = group.users[i];
             const userdata = yield getUser({ groupid, userid });
-            if (typeof userdata === 'object') {
+            if (typeof userdata === "object") {
                 data.push(userdata);
             }
         }
@@ -167,7 +167,7 @@ function getGroupUserData(groupid) {
     });
 }
 exports.getGroupUserData = getGroupUserData;
-function addToGroup({ groupid, userid }) {
+function addToGroup({ groupid, userid, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
         if (!group) {
@@ -186,17 +186,17 @@ exports.addToGroup = addToGroup;
 function writeUser(user, service) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!user.userid) {
-            console.log('--- writeUser: missing userid ---');
+            console.log("--- writeUser: missing userid ---");
             return false;
         }
         // redis
-        if (!service || service === 'redis') {
+        if (!service || service === "redis") {
             yield redisconnection_1.redisPubClient.set(`user-${user.userid}`, JSON.stringify(user));
         }
         // sql
-        if (!service || service === 'sql') {
-            yield USERS.upsert(user).catch(err => {
-                console.log('--- writeUser sql error ---');
+        if (!service || service === "sql") {
+            yield USERS.upsert(user).catch((err) => {
+                console.log("--- writeUser sql error ---");
                 console.log(err);
             });
         }
@@ -206,25 +206,27 @@ exports.writeUser = writeUser;
 function writeGroup(group, service) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!group.groupid) {
-            console.log('--- missing group id ---');
+            console.log("--- missing group id ---");
             return false;
         }
         // redis
-        if (!service || service === 'redis') {
+        if (!service || service === "redis") {
             // l4('write group redis', group)
-            yield redisconnection_1.redisPubClient.set(`group-${group.groupid}`, JSON.stringify(group)).catch();
+            yield redisconnection_1.redisPubClient
+                .set(`group-${group.groupid}`, JSON.stringify(group))
+                .catch();
         }
         // sql
-        if (!service || service === 'sql') {
-            const ret = yield GROUPS.upsert(group).catch(err => {
-                console.log('--- writeGroup sql error ---');
+        if (!service || service === "sql") {
+            const ret = yield GROUPS.upsert(group).catch((err) => {
+                console.log("--- writeGroup sql error ---");
             });
         }
         // console.log('write group', group)
     });
 }
 exports.writeGroup = writeGroup;
-function writeAnswer({ groupid, userid, chapter, k, answer, name }, service) {
+function writeAnswer({ groupid, userid, chapter, k, answer, name, }, service) {
     return __awaiter(this, void 0, void 0, function* () {
         // redis
         const user = yield getUser({ userid, groupid, name });
@@ -239,7 +241,7 @@ function writeAnswer({ groupid, userid, chapter, k, answer, name }, service) {
     });
 }
 exports.writeAnswer = writeAnswer;
-function setFinished({ groupid, chapter }) {
+function setFinished({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
         if (!group.finished) {
@@ -252,7 +254,7 @@ function setFinished({ groupid, chapter }) {
     });
 }
 exports.setFinished = setFinished;
-function setUnFinished({ groupid, chapter }) {
+function setUnFinished({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
         if (!group.finished) {
@@ -265,7 +267,7 @@ function setUnFinished({ groupid, chapter }) {
     });
 }
 exports.setUnFinished = setUnFinished;
-function setShowResults({ groupid, chapter }) {
+function setShowResults({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
         if (!group.showResults) {
@@ -278,7 +280,7 @@ function setShowResults({ groupid, chapter }) {
     });
 }
 exports.setShowResults = setShowResults;
-function setUnShowResults({ groupid, chapter }) {
+function setUnShowResults({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
         if (!group.showResults) {
@@ -291,10 +293,10 @@ function setUnShowResults({ groupid, chapter }) {
     });
 }
 exports.setUnShowResults = setUnShowResults;
-function setStartChapter({ groupid, chapter }) {
+function setStartChapter({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
-        if (typeof group !== 'object') {
+        if (typeof group !== "object") {
             throw Error(`Group does not exist. Can not start chapter ${groupid}, ${chapter}`);
         }
         if (!group.started) {
@@ -307,10 +309,10 @@ function setStartChapter({ groupid, chapter }) {
     });
 }
 exports.setStartChapter = setStartChapter;
-function setUnStartChapter({ groupid, chapter }) {
+function setUnStartChapter({ groupid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const group = yield getGroup(groupid);
-        if (typeof group !== 'object') {
+        if (typeof group !== "object") {
             throw Error(`Group does not exist. Can not unstart chapter ${groupid}, ${chapter}`);
         }
         if (!group.started) {
@@ -323,7 +325,7 @@ function setUnStartChapter({ groupid, chapter }) {
     });
 }
 exports.setUnStartChapter = setUnStartChapter;
-function setDone({ groupid, userid, chapter }) {
+function setDone({ groupid, userid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield getUser({ groupid, userid });
         if (!user.done) {
@@ -336,7 +338,7 @@ function setDone({ groupid, userid, chapter }) {
     });
 }
 exports.setDone = setDone;
-function setUnDone({ groupid, userid, chapter }) {
+function setUnDone({ groupid, userid, chapter, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield getUser({ groupid, userid });
         if (!user.done) {
@@ -349,7 +351,7 @@ function setUnDone({ groupid, userid, chapter }) {
     });
 }
 exports.setUnDone = setUnDone;
-function writeComment({ text, groupid, userid, id, duration }) {
+function writeComment({ text, groupid, userid, id, duration, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const commentObject = { text };
         if (groupid) {
@@ -364,7 +366,7 @@ function writeComment({ text, groupid, userid, id, duration }) {
         if (id) {
             commentObject.id = id;
         }
-        const ret = yield COMMENTS.upsert(commentObject, { returning: ['*'] });
+        const ret = yield COMMENTS.upsert(commentObject, { returning: ["*"] });
         // console.log('============')
         // console.log(ret)
         // console.log('============')
@@ -372,3 +374,29 @@ function writeComment({ text, groupid, userid, id, duration }) {
     });
 }
 exports.writeComment = writeComment;
+function backup() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return true;
+        // const _models = [{ GROUPS }, { USERS }, { COMMENTS }];
+        // const exportData = [];
+        // for (let m in _models) {
+        //   let tmpData = await Object.values(_models[m])[0].findAll({
+        //     paranoid: false,
+        //   });
+        //   if (tmpData) {
+        //     tmpData = JSON.parse(JSON.stringify(tmpData));
+        //   }
+        //   let tmpobj = {
+        //     name: Object.keys(_models[m])[0],
+        //     data: tmpData || [],
+        //   };
+        //   //
+        //   //
+        //   exportData.push(tmpobj);
+        // }
+        // // place the file in the dir
+        // const pad = `./backup/backup.json`;
+        // return fs.writeFileSync(pad, JSON.stringify(exportData));
+    });
+}
+exports.backup = backup;

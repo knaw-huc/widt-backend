@@ -47,11 +47,11 @@ const router = express_1.default.Router();
 router.use((0, cors_1.default)({
     origin: [
         new RegExp(/http:\/\/localhost$/),
-        'http:localhost',
+        "http:localhost",
         new RegExp(/\.wie-is-de-trol\.nl$/),
         new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
     ],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 }));
 router.use(express_1.default.urlencoded({ extended: true }));
 router.use(express_1.default.json());
@@ -61,11 +61,11 @@ Promise.all([redisconnection_1.redisPubClient.connect(), redisconnection_1.redis
     redisconnection_1.io.adapter((0, redis_adapter_1.createAdapter)(redisconnection_1.redisPubClient, redisconnection_1.redisSubClient));
     redisconnection_1.io.listen(3000);
 });
-redisconnection_1.io.on('connection', (socket) => {
+redisconnection_1.io.on("connection", (socket) => {
     /*
     Join Room
     */
-    socket.on('joinRoom', ({ groupid, userid }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("joinRoom", ({ groupid, userid }) => __awaiter(void 0, void 0, void 0, function* () {
         // log
         // l1('joinRoom')
         // l2({ groupid, userid })
@@ -78,23 +78,23 @@ redisconnection_1.io.on('connection', (socket) => {
         }
         // join socket room
         socket.join(groupid);
-        socket.emit('goto', group.position);
+        socket.emit("goto", group.position);
     }));
-    socket.on('getGroupData', ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("getGroupData", ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
         const group = yield dataApi.getGroup(groupid);
-        redisconnection_1.io.to(groupid).emit('loadGroupData', group);
+        redisconnection_1.io.to(groupid).emit("loadGroupData", group);
     }));
-    socket.on('prev', ({ groupid }, cb) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("prev", ({ groupid }, cb) => __awaiter(void 0, void 0, void 0, function* () {
         // l1('prev')
         const group = yield dataApi.getGroup(groupid);
         group.position = group.position === 0 ? 0 : group.position - 1;
         yield dataApi.writeGroup(group);
-        redisconnection_1.io.to(groupid).emit('goto', group.position);
+        redisconnection_1.io.to(groupid).emit("goto", group.position);
         if (cb) {
             cb();
         }
     }));
-    socket.on('next', ({ groupid, position }, cb) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("next", ({ groupid, position }, cb) => __awaiter(void 0, void 0, void 0, function* () {
         // l1('next')
         const group = yield dataApi.getGroup(groupid);
         if (position !== undefined) {
@@ -104,13 +104,13 @@ redisconnection_1.io.on('connection', (socket) => {
             group.position = group.position + 1 || 0;
         }
         yield dataApi.writeGroup(group);
-        console.log('goto', group.position, groupid);
-        redisconnection_1.io.to(groupid).emit('goto', group.position);
+        console.log("goto", group.position, groupid);
+        redisconnection_1.io.to(groupid).emit("goto", group.position);
         if (cb) {
             cb();
         }
     }));
-    socket.on('createUser', ({ userid, groupid, name }, cb) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("createUser", ({ userid, groupid, name }, cb) => __awaiter(void 0, void 0, void 0, function* () {
         // TODO: check first if name exists
         // if (nameExists) {
         //   io.emit('alert', 'Deze naam bestaat al in deze groep.')
@@ -123,107 +123,115 @@ redisconnection_1.io.on('connection', (socket) => {
         // add to group
         yield dataApi.addToGroup({ groupid, userid });
         // joinroom
-        console.log('createUser, join group:', groupid);
+        console.log("createUser, join group:", groupid);
         socket.join(groupid);
         // update all
-        redisconnection_1.io.to(groupid).emit('addUser', { userid, groupid, name });
+        redisconnection_1.io.to(groupid).emit("addUser", { userid, groupid, name });
         // send groupuserdata
         const groupUserData = yield dataApi.getGroupUserData(groupid);
-        redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
+        redisconnection_1.io.to(groupid).emit("groupUserData", groupUserData);
         // done
         if (cb) {
             cb(true);
         }
     }));
-    socket.on('getUserData', ({ userid, groupid, name }, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("getUserData", ({ userid, groupid, name }, callback) => __awaiter(void 0, void 0, void 0, function* () {
         const user = yield dataApi.getUser({ userid, groupid, name });
         // io.emit('setUserData', user)
         callback(user);
     }));
-    socket.on('removeUser', ({ groupid, userid }, callback) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("removeUser", ({ groupid, userid }, callback) => __awaiter(void 0, void 0, void 0, function* () {
         const done = yield dataApi.removeUser({ groupid, userid }).catch(() => {
             callback(false);
         });
-        const groupUserData = yield dataApi.getGroupUserData(groupid).catch(err => {
-            console.warn('group does not exist.');
+        const groupUserData = yield dataApi
+            .getGroupUserData(groupid)
+            .catch((err) => {
+            console.warn("group does not exist.");
         });
-        if (typeof groupUserData !== 'boolean' && groupUserData) {
-            redisconnection_1.io.to(groupid).emit('groupUserData', groupUserData);
+        if (typeof groupUserData !== "boolean" && groupUserData) {
+            redisconnection_1.io.to(groupid).emit("groupUserData", groupUserData);
         }
         callback(true);
     }));
-    socket.on('getAllUserData', ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("getAllUserData", ({ groupid }) => __awaiter(void 0, void 0, void 0, function* () {
         // sync userdata
         const groupUserData = yield dataApi.getGroupUserData(groupid);
         // send userdata to group
         // console.log('groupUserData', groupUserData)
-        redisconnection_1.io.emit('groupUserData', groupUserData);
+        redisconnection_1.io.emit("groupUserData", groupUserData);
     }));
     /*
     Submit Answer
     */
-    socket.on('setAnswer', ({ groupid, userid, chapter, k, answer, name }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("setAnswer", ({ groupid, userid, chapter, k, answer, name }) => __awaiter(void 0, void 0, void 0, function* () {
         // update redit user-{userid}
         yield dataApi.writeAnswer({ groupid, userid, chapter, k, answer, name });
         // send to group
-        redisconnection_1.io.to(groupid).emit('updateAnswer', { userid, chapter, k, answer });
+        redisconnection_1.io.to(groupid).emit("updateAnswer", { userid, chapter, k, answer });
     }));
     /*
     toggle finished state of chapter
     */
-    socket.on('startChapter', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("startChapter", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setStartChapter({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setStartChapter', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setStartChapter", { chapter, groupid });
     }));
-    socket.on('unStartChapter', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("unStartChapter", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setUnStartChapter({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setUnStartChapter', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setUnStartChapter", { chapter, groupid });
     }));
-    socket.on('finish', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("finish", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setFinished({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setFinished', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setFinished", { chapter, groupid });
     }));
-    socket.on('unFinish', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("unFinish", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setUnFinished({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setUnFinished', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setUnFinished", { chapter, groupid });
     }));
-    socket.on('setShowResults', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("setShowResults", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setShowResults({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setShowResults', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setShowResults", { chapter, groupid });
     }));
-    socket.on('setUnShowResults', ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("setUnShowResults", ({ groupid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         // write finished state
         yield dataApi.setUnShowResults({ groupid, chapter });
         // update state to group
-        redisconnection_1.io.to(groupid).emit('setUnShowResults', { chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setUnShowResults", { chapter, groupid });
     }));
-    socket.on('setDone', ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("setDone", ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         yield dataApi.setDone({ groupid, userid, chapter });
-        redisconnection_1.io.to(groupid).emit('setDone', { userid, chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setDone", { userid, chapter, groupid });
     }));
-    socket.on('setUnDone', ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on("setUnDone", ({ groupid, userid, chapter }) => __awaiter(void 0, void 0, void 0, function* () {
         yield dataApi.setUnDone({ groupid, userid, chapter });
-        redisconnection_1.io.to(groupid).emit('setDone', { userid, chapter, groupid });
+        redisconnection_1.io.to(groupid).emit("setDone", { userid, chapter, groupid });
     }));
 });
-router.get('/testbot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/testbot", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var startTime = performance.now();
-    const data = yield fetch('http://bot:5000/', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userid: 'user-123', 'groupid': 'group-123', 'comment': 'Vind dit weer echt vreselijk. Van mij hoeft het niet warmer dan 20 graden te worden. Maar ben bang dat dit helemaal de verkeerde kant op gaat. De winters zijn we al vergeten. Dat bestaat al niet meer. Dit is gewoon een natuur ramp!' })
-    }).then(data => data.json()).catch(err => {
-        console.warn('--- error --- ');
+    const data = yield fetch("http://bot:5000/", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userid: "user-123",
+            groupid: "group-123",
+            comment: "Vind dit weer echt vreselijk. Van mij hoeft het niet warmer dan 20 graden te worden. Maar ben bang dat dit helemaal de verkeerde kant op gaat. De winters zijn we al vergeten. Dat bestaat al niet meer. Dit is gewoon een natuur ramp!",
+        }),
+    })
+        .then((data) => data.json())
+        .catch((err) => {
+        console.warn("--- error --- ");
         console.warn(err);
         res.send({ error: err });
     });
@@ -233,29 +241,35 @@ router.get('/testbot', (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.send({ data, time });
     }
 }));
-router.get('/groupinfo', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // groups
-    const groupKeys = yield redisconnection_1.redisPubClient.keys("group-*");
-    const groups = [];
-    for (let i in groupKeys) {
-        groups.push(JSON.parse(yield redisconnection_1.redisPubClient.get(groupKeys[i])));
-    }
-    // users
-    const userKeys = yield redisconnection_1.redisPubClient.keys("user-*");
-    const users = [];
-    for (let i in userKeys) {
-        users.push(JSON.parse(yield redisconnection_1.redisPubClient.get(userKeys[i])));
-    }
-    // send
-    res.send({ groups, users });
+// router.get('/groupinfo', async (req, res) => {
+//   // groups
+//   const groupKeys = await redisPubClient.keys("group-*")
+//   const groups = []
+//   for (let i in groupKeys) { groups.push(JSON.parse(await redisPubClient.get(groupKeys[i]))) }
+//   // users
+//   const userKeys = await redisPubClient.keys("user-*")
+//   const users = []
+//   for (let i in userKeys) { users.push(JSON.parse(await redisPubClient.get(userKeys[i]))) }
+//   // send
+//   res.send({groups, users})
+// })
+router.get("/backup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield dataApi.backup();
+    res.send("done.");
 }));
-router.get('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/beatthebot", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var startTime = performance.now();
-    const data = yield fetch('http://bot:5000/', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userid: 'user-123', 'groupid': 'group-123', 'comment': 'Kunnen we nu eindelijk aan de ijstijd beginnen? We hebben het nu al wel lang genoeg uitgesteld en het begint mij een beetje te heet onder de voeten te worden.' })
-    }).then(data => data.json()).catch(err => {
+    const data = yield fetch("http://bot:5000/", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userid: "user-123",
+            groupid: "group-123",
+            comment: "Kunnen we nu eindelijk aan de ijstijd beginnen? We hebben het nu al wel lang genoeg uitgesteld en het begint mij een beetje te heet onder de voeten te worden.",
+        }),
+    })
+        .then((data) => data.json())
+        .catch((err) => {
         console.warn(err);
         res.send({ error: err });
     });
@@ -265,18 +279,28 @@ router.get('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, functi
         res.send({ score: data.value, time });
     }
 }));
-router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/beatthebot", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body || !req.body.text) {
-        res.send('No input.');
+        res.send("No input.");
         return false;
     }
-    const comment = yield dataApi.writeComment({ text: req.body.text, userid: req.body.userid || 'none', groupid: req.body.groupid || 'none' });
+    const comment = yield dataApi.writeComment({
+        text: req.body.text,
+        userid: req.body.userid || "none",
+        groupid: req.body.groupid || "none",
+    });
     var startTime = performance.now();
-    const data = yield fetch('http://bot:5000/', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userid: req.body.userid || 'none', 'groupid': req.body.groupid || 'none', 'comment': req.body.text })
-    }).then(data => data.json()).catch(err => {
+    const data = yield fetch("http://bot:5000/", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userid: req.body.userid || "none",
+            groupid: req.body.groupid || "none",
+            comment: req.body.text,
+        }),
+    })
+        .then((data) => data.json())
+        .catch((err) => {
         console.warn(err);
         res.send({ error: err });
     });
@@ -290,19 +314,19 @@ router.post('/beatthebot', (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.send({ score: data.value, time });
     }
 }));
-router.post('/beatthebot_external', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/beatthebot_external", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body || !req.body.text) {
-        res.send('No input.');
+        res.send("No input.");
         return false;
     }
     const URL = process.env.BOTAPI;
     let headers = {};
     if (process.env.BOTAPIKEY) {
-        headers = { 'Authorization': 'Bearer ' + process.env.BOTAPIKEY };
+        headers = { Authorization: "Bearer " + process.env.BOTAPIKEY };
     }
     fetch(URL, { headers, method: "POST", body: req.body.text })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
         let score = -1;
         // if (data[0] && data[0][0] && data[0][0]['label'] === 'LABEL_1') {
         //   score = data[0][0]['score']
@@ -310,8 +334,8 @@ router.post('/beatthebot_external', (req, res) => __awaiter(void 0, void 0, void
         //   score = data[0][1]['score']
         // }
         for (let i in data[0]) {
-            if (data[0][i]['label'] === 'LABEL_1') {
-                score = data[0][i]['score'];
+            if (data[0][i]["label"] === "LABEL_1") {
+                score = data[0][i]["score"];
             }
         }
         res.send({ score: score });
