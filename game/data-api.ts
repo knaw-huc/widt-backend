@@ -17,6 +17,7 @@ const sequelize = new Sequelize(
 
 const GROUPS = sequelize.define<GROUPTABLE>("groups", {
   groupid: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
+  version: { type: DataTypes.STRING},
   position: { type: DataTypes.STRING },
   started: { type: DataTypes.JSON },
   users: { type: DataTypes.JSON },
@@ -55,6 +56,15 @@ COMMENTS.sync().catch((err) => {
   console.warn('---\nCannot create table "comments".\n---');
   console.warn(err);
 });
+
+sequelize.getQueryInterface().addColumn('groups', 'version', {
+  type: DataTypes.TEXT,
+}).then(x => {
+  console.log('column added')
+}).catch(x => {
+  console.log('column exists probably')
+})
+
 
 export async function getUser({
   userid,
@@ -148,6 +158,7 @@ export async function getGroup(groupid: string) {
 
   // create group if no redis && no mysql:
   const emptyGroup: GROUP = {
+    version: '',
     groupid,
     position: 0,
     started: [],
@@ -157,6 +168,13 @@ export async function getGroup(groupid: string) {
   };
   await writeGroup(emptyGroup);
   return emptyGroup;
+}
+
+export async function storeVersion({ groupid, version }: { groupid: string, version: string }) {
+  // only to sql
+  const ret = await GROUPS.upsert({groupid, version}).catch((err) => {
+    console.log("--- storeVersion sql error ---");
+  });
 }
 
 export async function getGroupUserData(groupid: string) {
@@ -233,6 +251,7 @@ export async function writeGroup(group: GROUP, service?: string) {
   // sql
   if (!service || service === "sql") {
     const ret = await GROUPS.upsert(group).catch((err) => {
+      console.log(err);
       console.log("--- writeGroup sql error ---");
     });
   }

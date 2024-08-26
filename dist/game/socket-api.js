@@ -104,13 +104,14 @@ redisconnection_1.io.on("connection", (socket) => {
             group.position = group.position + 1 || 0;
         }
         yield dataApi.writeGroup(group);
-        console.log("goto", group.position, groupid);
+        // console.log("goto", group.position, groupid);
         redisconnection_1.io.to(groupid).emit("goto", group.position);
         if (cb) {
             cb();
         }
     }));
     socket.on("createUser", ({ userid, groupid, name }, cb) => __awaiter(void 0, void 0, void 0, function* () {
+        // console.log('create User')
         // TODO: check first if name exists
         // if (nameExists) {
         //   io.emit('alert', 'Deze naam bestaat al in deze groep.')
@@ -123,7 +124,7 @@ redisconnection_1.io.on("connection", (socket) => {
         // add to group
         yield dataApi.addToGroup({ groupid, userid });
         // joinroom
-        console.log("createUser, join group:", groupid);
+        // console.log("createUser, join group:", groupid);
         socket.join(groupid);
         // update all
         redisconnection_1.io.to(groupid).emit("addUser", { userid, groupid, name });
@@ -160,6 +161,9 @@ redisconnection_1.io.on("connection", (socket) => {
         // send userdata to group
         // console.log('groupUserData', groupUserData)
         redisconnection_1.io.emit("groupUserData", groupUserData);
+    }));
+    socket.on("storeVersion", ({ groupid, version }) => __awaiter(void 0, void 0, void 0, function* () {
+        yield dataApi.storeVersion({ groupid, version });
     }));
     /*
     Submit Answer

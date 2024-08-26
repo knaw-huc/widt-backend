@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.backup = exports.writeComment = exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.getGroup = exports.removeUser = exports.getUser = void 0;
+exports.backup = exports.writeComment = exports.setUnDone = exports.setDone = exports.setUnStartChapter = exports.setStartChapter = exports.setUnShowResults = exports.setShowResults = exports.setUnFinished = exports.setFinished = exports.writeAnswer = exports.writeGroup = exports.writeUser = exports.addToGroup = exports.getGroupUserData = exports.storeVersion = exports.getGroup = exports.removeUser = exports.getUser = void 0;
 const redisconnection_1 = require("./redisconnection");
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("./connection"));
@@ -23,6 +23,7 @@ const sequelize = new sequelize_1.Sequelize(connection_1.default.database, proce
 });
 const GROUPS = sequelize.define("groups", {
     groupid: { type: sequelize_1.DataTypes.STRING, allowNull: false, primaryKey: true },
+    version: { type: sequelize_1.DataTypes.STRING },
     position: { type: sequelize_1.DataTypes.STRING },
     started: { type: sequelize_1.DataTypes.JSON },
     users: { type: sequelize_1.DataTypes.JSON },
@@ -55,6 +56,13 @@ GROUPS.sync().catch((err) => {
 COMMENTS.sync().catch((err) => {
     console.warn('---\nCannot create table "comments".\n---');
     console.warn(err);
+});
+sequelize.getQueryInterface().addColumn('groups', 'version', {
+    type: sequelize_1.DataTypes.TEXT,
+}).then(x => {
+    console.log('column added');
+}).catch(x => {
+    console.log('column exists probably');
 });
 function getUser({ userid, groupid, name, }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -137,6 +145,7 @@ function getGroup(groupid) {
         }
         // create group if no redis && no mysql:
         const emptyGroup = {
+            version: '',
             groupid,
             position: 0,
             started: [],
@@ -149,6 +158,15 @@ function getGroup(groupid) {
     });
 }
 exports.getGroup = getGroup;
+function storeVersion({ groupid, version }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // only to sql
+        const ret = yield GROUPS.upsert({ groupid, version }).catch((err) => {
+            console.log("--- storeVersion sql error ---");
+        });
+    });
+}
+exports.storeVersion = storeVersion;
 function getGroupUserData(groupid) {
     return __awaiter(this, void 0, void 0, function* () {
         const data = [];
@@ -219,6 +237,7 @@ function writeGroup(group, service) {
         // sql
         if (!service || service === "sql") {
             const ret = yield GROUPS.upsert(group).catch((err) => {
+                console.log(err);
                 console.log("--- writeGroup sql error ---");
             });
         }

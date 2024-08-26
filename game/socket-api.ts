@@ -89,10 +89,9 @@ io.on("connection", (socket) => {
     } else {
       group.position = group.position + 1 || 0;
     }
-
     await dataApi.writeGroup(group);
 
-    console.log("goto", group.position, groupid);
+    // console.log("goto", group.position, groupid);
     io.to(groupid).emit("goto", group.position);
 
     if (cb) {
@@ -101,6 +100,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("createUser", async ({ userid, groupid, name }, cb) => {
+    // console.log('create User')
     // TODO: check first if name exists
     // if (nameExists) {
     //   io.emit('alert', 'Deze naam bestaat al in deze groep.')
@@ -113,7 +113,7 @@ io.on("connection", (socket) => {
     // add to group
     await dataApi.addToGroup({ groupid, userid });
     // joinroom
-    console.log("createUser, join group:", groupid);
+    // console.log("createUser, join group:", groupid);
     socket.join(groupid);
     // update all
     io.to(groupid).emit("addUser", { userid, groupid, name });
@@ -156,6 +156,10 @@ io.on("connection", (socket) => {
     // send userdata to group
     // console.log('groupUserData', groupUserData)
     io.emit("groupUserData", groupUserData);
+  });
+  
+  socket.on("storeVersion", async ({ groupid, version }: {groupid:string, version: string}) => {
+    await dataApi.storeVersion({groupid, version})
   });
 
   /*

@@ -1,3 +1,4 @@
+import {app, server} from './app'
 import { Server } from 'socket.io'
 // import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from 'redis';
@@ -10,7 +11,7 @@ redisPubClient.on("error", function (err) {
   console.log("Redis Error:", err);
 });
 
-export const io = new Server<ClientToServerEvents, ServerToClientEvents>(2224, {
+export const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
