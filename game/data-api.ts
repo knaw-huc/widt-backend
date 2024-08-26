@@ -219,7 +219,7 @@ export async function addToGroup({
 
 export async function writeUser(user: USER, service?: string) {
   if (!user.userid) {
-    console.log("--- writeUser: missing userid ---");
+    console.log("--- writeUser: missing userid ---", new Date().toString());
     return false;
   }
   // redis
@@ -237,7 +237,7 @@ export async function writeUser(user: USER, service?: string) {
 
 export async function writeGroup(group: GROUP, service?: string) {
   if (!group.groupid) {
-    console.log("--- missing group id ---");
+    console.log("--- missing group id ---", new Date().toString());
     return false;
   }
 
@@ -252,7 +252,7 @@ export async function writeGroup(group: GROUP, service?: string) {
   if (!service || service === "sql") {
     const ret = await GROUPS.upsert(group).catch((err) => {
       console.log(err);
-      console.log("--- writeGroup sql error ---");
+      console.log("--- writeGroup sql error ---", new Date().toString());
     });
   }
   // console.log('write group', group)

@@ -204,7 +204,7 @@ exports.addToGroup = addToGroup;
 function writeUser(user, service) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!user.userid) {
-            console.log("--- writeUser: missing userid ---");
+            console.log("--- writeUser: missing userid ---", new Date().toString());
             return false;
         }
         // redis
@@ -224,7 +224,7 @@ exports.writeUser = writeUser;
 function writeGroup(group, service) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!group.groupid) {
-            console.log("--- missing group id ---");
+            console.log("--- missing group id ---", new Date().toString());
             return false;
         }
         // redis
@@ -238,7 +238,7 @@ function writeGroup(group, service) {
         if (!service || service === "sql") {
             const ret = yield GROUPS.upsert(group).catch((err) => {
                 console.log(err);
-                console.log("--- writeGroup sql error ---");
+                console.log("--- writeGroup sql error ---", new Date().toString());
             });
         }
         // console.log('write group', group)
