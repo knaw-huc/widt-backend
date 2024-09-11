@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
 
     io.to(groupid).emit("loadGroupData", group);
   });
-
+  
   socket.on("prev", async ({ groupid }, cb) => {
     // l1('prev')
 
@@ -155,7 +155,7 @@ io.on("connection", (socket) => {
     const groupUserData = await dataApi.getGroupUserData(groupid);
     // send userdata to group
     // console.log('groupUserData', groupUserData)
-    io.emit("groupUserData", groupUserData);
+    io.to(groupid).emit("groupUserData", groupUserData);
   });
   
   socket.on("storeVersion", async ({ groupid, version }: {groupid:string, version: string}) => {

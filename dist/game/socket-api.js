@@ -160,7 +160,7 @@ redisconnection_1.io.on("connection", (socket) => {
         const groupUserData = yield dataApi.getGroupUserData(groupid);
         // send userdata to group
         // console.log('groupUserData', groupUserData)
-        redisconnection_1.io.emit("groupUserData", groupUserData);
+        redisconnection_1.io.to(groupid).emit("groupUserData", groupUserData);
     }));
     socket.on("storeVersion", ({ groupid, version }) => __awaiter(void 0, void 0, void 0, function* () {
         yield dataApi.storeVersion({ groupid, version });
