@@ -12,7 +12,7 @@ export async function backup(force?: boolean){
   trytoupload: try {
     console.log('——————— start upload ———————')
     const tempname = '/tmp/backup.json'
-    const name = new Date().toLocaleString().replace(',', '').replace(/\//g, '-') + '.json';
+    const name = new Date().toLocaleString().replace(',', '').replace(/\//g, '-') + (process.env.LOCALDEV ? 'local' : '') + '.json';
     // get data
     const data = await dataApi.backup()
     if (!data) { throw Error('No data.') }
@@ -25,15 +25,15 @@ export async function backup(force?: boolean){
         break trytoupload
       }
     }
-    // write data    
-    fs.writeFileSync(tempname, datastring)
     // upload data
     console.log('Uploading data...')
     // Upload the file to the WebDAV server
-    // const ret = await client.putFileContents(name, datastring, { overwrite: false });
-    // if (ret) {
-    //   console.log('...upload succesfull!')
-    // }
+    const ret = await client.putFileContents(name, datastring, { overwrite: false });
+    if (ret) {
+      // write data    
+      fs.writeFileSync(tempname, datastring)
+      console.log('...upload succesfull!')
+    }
     
   } catch (error) {
     console.log('———— Error backing up.')

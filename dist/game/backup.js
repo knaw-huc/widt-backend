@@ -47,7 +47,7 @@ function backup(force) {
         trytoupload: try {
             console.log('——————— start upload ———————');
             const tempname = '/tmp/backup.json';
-            const name = new Date().toLocaleString().replace(',', '').replace(/\//g, '-') + '.json';
+            const name = new Date().toLocaleString().replace(',', '').replace(/\//g, '-') + (process.env.LOCALDEV ? 'local' : '') + '.json';
             // get data
             const data = yield dataApi.backup();
             if (!data) {
@@ -62,15 +62,15 @@ function backup(force) {
                     break trytoupload;
                 }
             }
-            // write data    
-            fs_1.default.writeFileSync(tempname, datastring);
             // upload data
             console.log('Uploading data...');
             // Upload the file to the WebDAV server
-            // const ret = await client.putFileContents(name, datastring, { overwrite: false });
-            // if (ret) {
-            //   console.log('...upload succesfull!')
-            // }
+            const ret = yield client.putFileContents(name, datastring, { overwrite: false });
+            if (ret) {
+                // write data    
+                fs_1.default.writeFileSync(tempname, datastring);
+                console.log('...upload succesfull!');
+            }
         }
         catch (error) {
             console.log('———— Error backing up.');
