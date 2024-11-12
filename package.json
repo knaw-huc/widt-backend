@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "docker compose up -d && docker attach widt-app",
     "tsc": "tsc",
-    "dev2": "tsc --watch",
+    "dev2": "docker exec -it widt-app yarn tsc",
     "open": "docker attach widt-app",
     "edit": "docker exec -it widt-app sh",
     "stop": "docker compose down",
@@ -29,6 +29,5 @@
     "socket.io": "^4.8.1",
     "typescript": "^4.9.5",
     "webdav": "^5.7.1"
-  },
-  "packageManager": "yarn@3.6.3"
+  }
 }
