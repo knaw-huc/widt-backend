@@ -395,24 +395,24 @@ function writeComment({ text, groupid, userid, id, duration, }) {
 exports.writeComment = writeComment;
 function backup() {
     return __awaiter(this, void 0, void 0, function* () {
-        return true;
-        // const _models = [{ GROUPS }, { USERS }, { COMMENTS }];
-        // const exportData = [];
-        // for (let m in _models) {
-        //   let tmpData = await Object.values(_models[m])[0].findAll({
-        //     paranoid: false,
-        //   });
-        //   if (tmpData) {
-        //     tmpData = JSON.parse(JSON.stringify(tmpData));
-        //   }
-        //   let tmpobj = {
-        //     name: Object.keys(_models[m])[0],
-        //     data: tmpData || [],
-        //   };
-        //   //
-        //   //
-        //   exportData.push(tmpobj);
-        // }
+        const _models = [{ GROUPS }, { USERS }, { COMMENTS }];
+        const exportData = [];
+        for (let m in _models) {
+            let tmpData = yield Object.values(_models[m])[0].findAll({
+                paranoid: false,
+            });
+            if (tmpData) {
+                tmpData = JSON.parse(JSON.stringify(tmpData));
+            }
+            let tmpobj = {
+                name: Object.keys(_models[m])[0],
+                data: tmpData || [],
+            };
+            //
+            //
+            exportData.push(tmpobj);
+        }
+        return exportData;
         // // place the file in the dir
         // const pad = `./backup/backup.json`;
         // return fs.writeFileSync(pad, JSON.stringify(exportData));

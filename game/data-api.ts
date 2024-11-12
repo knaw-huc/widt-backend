@@ -1,7 +1,6 @@
 import { redisPubClient } from "./redisconnection";
 import { Sequelize, DataTypes } from "sequelize";
 import connection from "./connection";
-import fs from "fs";
 import type { USER, GROUP, USERTABLE, GROUPTABLE } from "../types/types";
 
 const sequelize = new Sequelize(
@@ -477,24 +476,25 @@ export async function writeComment({
 }
 
 export async function backup() {
-  return true;
-  // const _models = [{ GROUPS }, { USERS }, { COMMENTS }];
-  // const exportData = [];
-  // for (let m in _models) {
-  //   let tmpData = await Object.values(_models[m])[0].findAll({
-  //     paranoid: false,
-  //   });
-  //   if (tmpData) {
-  //     tmpData = JSON.parse(JSON.stringify(tmpData));
-  //   }
-  //   let tmpobj = {
-  //     name: Object.keys(_models[m])[0],
-  //     data: tmpData || [],
-  //   };
-  //   //
-  //   //
-  //   exportData.push(tmpobj);
-  // }
+  const _models = [{ GROUPS }, { USERS }, { COMMENTS }];
+  const exportData = [];
+  for (let m in _models) {
+    let tmpData = await Object.values(_models[m])[0].findAll({
+      paranoid: false,
+    });
+    if (tmpData) {
+      tmpData = JSON.parse(JSON.stringify(tmpData));
+    }
+    let tmpobj = {
+      name: Object.keys(_models[m])[0],
+      data: tmpData || [],
+    };
+    //
+    //
+    exportData.push(tmpobj);
+  }
+
+  return exportData
 
   // // place the file in the dir
   // const pad = `./backup/backup.json`;

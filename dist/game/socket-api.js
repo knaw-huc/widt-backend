@@ -42,6 +42,7 @@ const redis_adapter_1 = require("@socket.io/redis-adapter");
 const express_1 = __importDefault(require("express"));
 require("dotenv/config");
 const cors_1 = __importDefault(require("cors"));
+const backup_1 = require("./backup");
 // const fetch = import('node-fetch');
 const router = express_1.default.Router();
 router.use((0, cors_1.default)({
@@ -257,10 +258,10 @@ router.get("/testbot", (req, res) => __awaiter(void 0, void 0, void 0, function*
 //   // send
 //   res.send({groups, users})
 // })
-router.get("/backup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield dataApi.backup();
-    res.send("done.");
-}));
+// router.get("/backup", async (req, res) => {
+//   await dataApi.backup();
+//   res.send("done.");
+// });
 router.get("/beatthebot", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var startTime = performance.now();
     const data = yield fetch("http://bot:5000/", {
@@ -344,6 +345,10 @@ router.post("/beatthebot_external", (req, res) => __awaiter(void 0, void 0, void
         }
         res.send({ score: score });
     });
+}));
+router.get('/backup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, backup_1.backup)(true);
+    res.send({ backup: 'success' });
 }));
 const socketApi = router;
 exports.socketApi = socketApi;

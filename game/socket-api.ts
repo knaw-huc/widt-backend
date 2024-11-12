@@ -5,6 +5,7 @@ import { l1, l2, l3, l4, log } from "./log";
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
+import {backup} from './backup'
 
 // const fetch = import('node-fetch');
 
@@ -265,10 +266,10 @@ router.get("/testbot", async (req, res) => {
 //   res.send({groups, users})
 // })
 
-router.get("/backup", async (req, res) => {
-  await dataApi.backup();
-  res.send("done.");
-});
+// router.get("/backup", async (req, res) => {
+//   await dataApi.backup();
+//   res.send("done.");
+// });
 
 router.get("/beatthebot", async (req, res) => {
   var startTime = performance.now();
@@ -361,6 +362,11 @@ router.post("/beatthebot_external", async (req, res) => {
       res.send({ score: score });
     });
 });
+
+router.get('/backup', async (req, res) => {
+  await backup(true)
+  res.send({ backup:'success'})
+})
 
 const socketApi = router;
 
