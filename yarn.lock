@@ -2109,7 +2109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socket.io-adapter@npm:~2.5.2":
+"socket.io-adapter@npm:^2.5.5, socket.io-adapter@npm:~2.5.2":
   version: 2.5.5
   resolution: "socket.io-adapter@npm:2.5.5"
   dependencies:
@@ -2488,6 +2488,7 @@ __metadata:
     redis: ^4.7.0
     sequelize: ^6.37.5
     socket.io: ^4.8.1
+    socket.io-adapter: ^2.5.5
     typescript: ^4.9.5
     webdav: ^5.7.1
   languageName: unknown
