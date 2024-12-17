@@ -25,14 +25,18 @@ export async function backup(force?: boolean){
         break trytoupload
       }
     }
-    // upload data
-    console.log('Uploading data...')
+    
+    // write to local backup
+    fs.writeFileSync(`/backup/${name}`, datastring)
     // Upload the file to the WebDAV server
+    console.log('Uploading data...')
     const ret = await client.putFileContents(name, datastring, { overwrite: false });
     if (ret) {
-      // write data    
+      // write data to temp file to check if it changed
       fs.writeFileSync(tempname, datastring)
       console.log('...upload succesfull!')
+    } else {
+      throw Error('Upload failed.')
     }
     
   } catch (error) {

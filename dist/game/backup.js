@@ -62,14 +62,18 @@ function backup(force) {
                     break trytoupload;
                 }
             }
-            // upload data
-            console.log('Uploading data...');
+            // write to local backup
+            fs_1.default.writeFileSync(`/backup/${name}`, datastring);
             // Upload the file to the WebDAV server
+            console.log('Uploading data...');
             const ret = yield client.putFileContents(name, datastring, { overwrite: false });
             if (ret) {
-                // write data    
+                // write data to temp file to check if it changed
                 fs_1.default.writeFileSync(tempname, datastring);
                 console.log('...upload succesfull!');
+            }
+            else {
+                throw Error('Upload failed.');
             }
         }
         catch (error) {
