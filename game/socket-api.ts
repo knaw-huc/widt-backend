@@ -17,6 +17,7 @@ router.use(
       new RegExp(/http:\/\/localhost$/),
       "http:localhost",
       new RegExp(/\.wie-is-de-trol\.nl$/),
+      new RegExp(/\.vercel\.app$/),
       new RegExp(/\.wie-is-de-trol\.nl\/beatthebot$/),
     ],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
