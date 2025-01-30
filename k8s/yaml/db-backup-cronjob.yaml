@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: widt-db-backup-cronjob
+  namespace: wieisdetrol
+spec:
+  schedule: "30 4 * * *"  # 4:30 UTC = 5:30 Europe/Amsterdam
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600  # 10 minutes should be plenty
+      template:
+        spec:
+          containers:
+            - image: mariadb
+              name: widt-backend-mariadb
+              args: ["/opt/backup.sh"]
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: MYSQL_DATABASE
+                  value: database
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: MYSQL_PASSWORD
+                      name: widt-secrets
+                - name: MYSQL_ROOT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: MYSQL_ROOT_PASSWORD
+                      name: widt-secrets
+                - name: MYSQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: MYSQL_USER
+                      name: widt-secrets
+              volumeMounts:
+                - mountPath: /backup
+                  name: backup
+                - mountPath: /opt
+                  name: backupscript
+                  readOnly: true
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: pvc-backup
+            - configMap:
+                defaultMode: 0777
+                name: backupscript
+              name: backupscript
+          restartPolicy: Never

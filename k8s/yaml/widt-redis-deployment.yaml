@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: widt-redis
+  name: widt-redis
+  namespace: wieisdetrol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: widt-redis
+  template:
+    metadata:
+      labels:
+        io.kompose.service: widt-redis
+    spec:
+      containers:
+        - image: redis:alpine
+          name: widt-redis
+          ports:
+            - containerPort: 6379
+              protocol: TCP

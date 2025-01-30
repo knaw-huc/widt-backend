@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: nginx
+  name: pvc-videos
+  namespace: wieisdetrol
+spec:
+  storageClassName: nutanix-volume
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

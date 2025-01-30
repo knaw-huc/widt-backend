@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: nginx
+  name: nginx
+  namespace: wieisdetrol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: nginx
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: nginx
+    spec:
+      containers:
+        - image: nginx
+          name: nginx
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          tty: true
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d/default.conf
+              name: nginx-config
+              readOnly: true
+              subPath: default.conf
+            - mountPath: /data/videos
+              name: pvc-videos
+      volumes:
+        - configMap:
+            items:
+              - key: nginx.conf
+                path: default.conf
+            name: nginx-config
+          name: nginx-config
+        - name: pvc-videos
+          persistentVolumeClaim:
+            claimName: pvc-videos

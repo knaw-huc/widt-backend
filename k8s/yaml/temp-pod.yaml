@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: temp
+  labels:
+    name: temp-pvc
+spec:
+  containers:
+    - name: temp-pvc
+      image: nginx
+      volumeMounts:
+        - name: backendapp
+          mountPath: /backendapp
+        - name: bot
+          mountPath: /bot
+        - name: docker-entrypoint-db
+          mountPath: /docker-entrypoint-db
+        - name: videos
+          mountPath: /videos
+        - name: bot-site-packages
+          mountPath: /site-packages
+  volumes:
+    - name: backendapp
+      persistentVolumeClaim:
+        claimName: pvc-backendapp
+    - name: bot
+      persistentVolumeClaim:
+        claimName: pvc-bot
+    - name: docker-entrypoint-db
+      persistentVolumeClaim:
+        claimName: pvc-docker-entrypoint-db
+    - name: videos
+      persistentVolumeClaim:
+        claimName: pvc-videos
+    - name: bot-site-packages
+      persistentVolumeClaim:
+        claimName: pvc-bot-site-packages
