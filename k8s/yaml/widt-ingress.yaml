@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: 512m
 spec:
   rules:
-    - host: wieisdetrol.dev.diginfra.org
+    - host: api.wie-is-de-trol.nl
       http:
         paths:
           - path: /
