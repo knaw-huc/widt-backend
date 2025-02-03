@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: db
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: db
+  template:
+    metadata:
+      labels:
+        io.kompose.service: db
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_DATABASE
+              value: database
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_PASSWORD
+                  name: widt-secrets
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_ROOT_PASSWORD
+                  name: widt-secrets
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: MYSQL_USER
+                  name: widt-secrets
+          image: mariadb
+          name: widt-backend-mariadb
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: docker-entrypoint-db
+            - mountPath: /var/lib/mysql
+              name: var-lib-mysql
+            - mountPath: /backup
+              name: backup
+      volumes:
+        - name: docker-entrypoint-db
+          persistentVolumeClaim:
+            claimName: pvc-docker-entrypoint-db
+        - name: var-lib-mysql
+          persistentVolumeClaim:
+            claimName: pvc-db
+        - name: backup
+          persistentVolumeClaim:
+            claimName: pvc-backup

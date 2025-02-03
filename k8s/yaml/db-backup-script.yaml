@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backupscript
+  namespace: wieisdetrol
+data:
+  backup.sh: |
+    #! /bin/bash
+    
+    TIMESTAMP=$(date +"%y%m%d%H%M")
+    BACKUP_DIR="/backup"
+    MYSQLDUMP=/usr/bin/mariadb-dump
+    MYSQL_HOST=db
+    
+    find $BACKUP_DIR/*.sql.gz -mtime +14 -delete
+        
+    $MYSQLDUMP -h ${MYSQL_HOST} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} ${MYSQL_DATABASE} | gzip > ${BACKUP_DIR}/${MYSQL_DATABASE}_${TIMESTAMP}.sql.gz
