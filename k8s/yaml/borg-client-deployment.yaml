@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: borgclient-wieisdetrol
+  namespace: wieisdetrol
+  labels:
+    app: borgclient-wieisdetrol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: borgclient-wieisdetrol
+  template:
+    metadata:
+      labels:
+        app: borgclient-wieisdetrol
+    spec:
+      containers:
+        - image: "registry.diginfra.net/borgbackup/borgclient:v1.0.1"
+          name: borgclient-wieisdetrol
+          env:
+            - name: TZ
+              value: "Europe/Amsterdam"
+            - name: TEMPORAL_CLI_ADDRESS
+              value: wfm.huc.knaw.nl:7233
+            - name: TEMPORAL_NAMESPACE
+              value: "backup"
+            - name: TEMPORAL_TASK_QUEUE
+              value: wieisdetrol
+            - name: BORG_SERVER
+              value: backup.huc.knaw.nl:2222
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /backup
+              name: backup
+              readOnly: true
+            - mountPath: /mnt
+              name: certificates
+              readOnly: true
+      volumes:
+        - name: backup
+          persistentVolumeClaim:
+            claimName: pvc-backup
+        - name: certificates
+          projected:
+            sources:
+              - secret:
+                  name: "temporal-wieisdetrol-key"
+              - configMap:
+                  name: "temporal-wieisdetrol-cert"
+              - configMap:
+                  name: "temporal-ca-wfm-cert"
