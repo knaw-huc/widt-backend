@@ -40,4 +40,4 @@ spec:
           name: nginx-config
         - name: pvc-videos
           persistentVolumeClaim:
-            claimName: pvc-videos
+            claimName: pvc-videos-v2

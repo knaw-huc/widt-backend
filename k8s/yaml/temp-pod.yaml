@@ -25,13 +25,13 @@ spec:
         claimName: pvc-backendapp
     - name: bot
       persistentVolumeClaim:
-        claimName: pvc-bot
+        claimName: pvc-bot-v2
     - name: docker-entrypoint-db
       persistentVolumeClaim:
-        claimName: pvc-docker-entrypoint-db
+        claimName: pvc-docker-entrypoint-db-v2
     - name: videos
       persistentVolumeClaim:
-        claimName: pvc-videos
+        claimName: pvc-videos-v2
     - name: bot-site-packages
       persistentVolumeClaim:
-        claimName: pvc-bot-site-packages
+        claimName: pvc-bot-site-packages-v2

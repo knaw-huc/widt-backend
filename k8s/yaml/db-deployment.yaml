@@ -48,10 +48,10 @@ spec:
       volumes:
         - name: docker-entrypoint-db
           persistentVolumeClaim:
-            claimName: pvc-docker-entrypoint-db
+            claimName: pvc-docker-entrypoint-db-v2
         - name: var-lib-mysql
           persistentVolumeClaim:
-            claimName: pvc-db
+            claimName: pvc-db-v2
         - name: backup
           persistentVolumeClaim:
             claimName: pvc-backup

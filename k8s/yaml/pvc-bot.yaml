@@ -3,10 +3,10 @@ kind: PersistentVolumeClaim
 metadata:
   labels:
     io.kompose.service: bot
-  name: pvc-bot
+  name: pvc-bot-v2
   namespace: wieisdetrol
 spec:
-  storageClassName: nutanix-volume
+  storageClassName: longhorn
   accessModes:
     - ReadWriteOnce
   resources:

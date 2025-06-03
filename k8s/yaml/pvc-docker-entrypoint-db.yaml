@@ -3,10 +3,10 @@ kind: PersistentVolumeClaim
 metadata:
   labels:
     io.kompose.service: db
-  name: pvc-docker-entrypoint-db
+  name: pvc-docker-entrypoint-db-v2
   namespace: wieisdetrol
 spec:
-  storageClassName: nutanix-volume
+  storageClassName: longhorn
   accessModes:
     - ReadWriteOnce
   resources:

@@ -36,7 +36,7 @@ spec:
       volumes:
         - name: app
           persistentVolumeClaim:
-            claimName: pvc-bot
+            claimName: pvc-bot-v2
         - name: bot-site-packages
           persistentVolumeClaim:
-            claimName: pvc-bot-site-packages
+            claimName: pvc-bot-site-packages-v2
